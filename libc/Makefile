@@ -20,7 +20,7 @@ LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_libk
 
 ARCHDIR=arch/$(HOSTARCH)
 
-include $(ARCHDIR)/make.config
+include $(ARCHDIR)/make.config #目前是空的
 
 CFLAGS:=$(CFLAGS) $(ARCH_CFLAGS)
 CPPFLAGS:=$(CPPFLAGS) $(ARCH_CPPFLAGS)
@@ -46,7 +46,7 @@ OBJS=\
 $(FREEOBJS) \
 $(HOSTEDOBJS) \
 
-LIBK_OBJS=$(FREEOBJS:.o=.libk.o)
+LIBK_OBJS=$(FREEOBJS:.o=.libk.o) #???
 
 #BINARIES=libc.a libk.a # Not ready for libc yet.
 BINARIES=libk.a

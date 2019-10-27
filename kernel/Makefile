@@ -1,4 +1,4 @@
-DEFAULT_HOST!=../default-host.sh
+DEFAULT_HOST!=../default-host.sh # elf-i686
 HOST?=DEFAULT_HOST
 HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
 
@@ -16,16 +16,16 @@ INCLUDEDIR?=$(PREFIX)/include
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
-LIBS:=$(LIBS) -nostdlib -lk -lgcc
+LIBS:=$(LIBS) -nostdlib -lk -lgcc # 指定 libk libgcc 内核专用数据结构 
 
 ARCHDIR=arch/$(HOSTARCH)
 
-include $(ARCHDIR)/make.config
+include $(ARCHDIR)/make.config  # 读取架构相关的配置
 
 CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
-LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
+LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)   
 
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
@@ -50,11 +50,11 @@ $(ARCHDIR)/crtn.o \
 .PHONY: all clean install install-headers install-kernel
 .SUFFIXES: .o .c .S
 
-all: myos.kernel
+all: sf-os.kernel
 
-myos.kernel: $(OBJS) $(ARCHDIR)/linker.ld
+sf-os.kernel: $(OBJS) $(ARCHDIR)/linker.ld
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
-	grub-file --is-x86-multiboot myos.kernel
+	grub-file --is-x86-multiboot sf-os.kernel
 
 $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
@@ -66,7 +66,7 @@ $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
 	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 clean:
-	rm -f myos.kernel
+	rm -f sf-os.kernel
 	rm -f $(OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
 
@@ -76,8 +76,8 @@ install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)
 	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
 
-install-kernel: myos.kernel
+install-kernel: sf-os.kernel
 	mkdir -p $(DESTDIR)$(BOOTDIR)
-	cp myos.kernel $(DESTDIR)$(BOOTDIR)
+	cp sf-os.kernel $(DESTDIR)$(BOOTDIR)
 
 -include $(OBJS:.o=.d)
