@@ -16,7 +16,7 @@ INCLUDEDIR?=$(PREFIX)/include
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
-LIBS:=$(LIBS) -nostdlib -lk -lgcc # 指定 libk libgcc 内核专用数据结构 
+LIBS:=$(LIBS) -nostdlib -lk -lgcc # 指定 libk libgcc 内核专用数据结构 libk.a libgcc.a
 
 ARCHDIR=arch/$(HOSTARCH)
 
@@ -30,7 +30,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
-kernel/segment.o
+kernel/segment.o kernel/interrupt.o 
 
 OBJS=\
 $(ARCHDIR)/crti.o \

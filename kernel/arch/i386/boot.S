@@ -1,4 +1,5 @@
 #include <kernel/segment.h>
+#include <kernel/i386/page.h>
 
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
@@ -20,11 +21,25 @@ stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
 
+pg0: 
+fill 
+
+
 # The kernel entry point.
 .section .text
 .global _start
 .type _start, @function
 _start:
+	# enable pageing 
+	movl $swapper_pg_dir ,%eax 
+	movl %eax, %cr3 
+
+	movl %cr0, %eax 
+	orl %eax, 0x80000000
+	movl %eax, %cr0
+	ljmp $__KERNEL_CS, $1f 
+1:
+
 	movl $stack_top, %esp
 
 	# Call the global constructors.
@@ -37,12 +52,45 @@ _start:
 	cli
 1:	hlt
 	jmp 1b
-.size _start, . - _start
 
+
+ignore_int:
+	cld
+	pushl %eax
+	pushl %ecx
+	pushl %edx
+	pushl %es
+	pushl %ds
+	movl $(__KERNEL_DS),%eax
+	movl %eax,%ds
+	movl %eax,%es
+	pushl 16(%esp)
+	pushl 24(%esp)
+	pushl 32(%esp)
+	pushl 40(%esp)
+	pushl $int_msg
+	#call printk
+	addl $(5*4),%esp
+	popl %ds
+	popl %es
+	popl %edx
+	popl %ecx
+	popl %eax
+	iret
+
+.size _start, . - _start
 
 .data
 .global cpu_gdt_table
 .global cpu_gdt_descr
+
+int_msg:
+	.asciz "Unknown interrupt or fault at EIP %p %p %p\n"
+cpu_idt_descr:
+	.word 256*8 - 1
+	.long idt_table
+
+
 cpu_gdt_descr:
 	.word GDT_ENTRIES*8-1
 	.long cpu_gdt_table
@@ -90,4 +138,3 @@ cpu_gdt_table:
 	.quad 0x0000000000000000	/* 0xe8 - unused */
 	.quad 0x0000000000000000	/* 0xf0 - unused */
 	.quad 0x0000000000000000	/* 0xf8 - GDT entry 31: double-fault TSS */
-
