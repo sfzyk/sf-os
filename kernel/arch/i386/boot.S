@@ -21,8 +21,9 @@ stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
 
+.align 4096
 pg0: 
-fill 
+.fill 2048,4,0 
 
 
 # The kernel entry point.
@@ -31,14 +32,28 @@ fill
 .type _start, @function
 _start:
 	# enable pageing 
-	movl $swapper_pg_dir ,%eax 
-	movl %eax, %cr3 
+	movl $pg0, %eax 
+	movl $global_page_dir - 0xc0000000 ,%ebx
+	leal 0x007(%eax), %edx  #page dir entry 
+	movl %edx, (%ebx)
+	movl %edx, 0xc00(%ebx)
+1:
+	movl 0x007, %eax 
+	movl $pg0, %edi 
+	cld 
+	movl $1024, %ecx
+2:
+	stosl
+	addl 0x1000, %eax 
+	loop 2b
 
+	movl $global_page_dir - 0xc0000000 ,%eax 
+	movl %eax, %cr3 
 	movl %cr0, %eax 
 	orl %eax, 0x80000000
 	movl %eax, %cr0
-	ljmp $__KERNEL_CS, $1f 
-1:
+	ljmp $__KERNEL_CS, $3f
+3:
 
 	movl $stack_top, %esp
 
@@ -50,8 +65,8 @@ _start:
 
 	# Hang if kernel_main unexpectedly returns.
 	cli
-1:	hlt
-	jmp 1b
+4:	hlt
+	jmp 4b
 
 
 ignore_int:

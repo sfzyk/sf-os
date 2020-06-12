@@ -1,4 +1,5 @@
-#include <kernel/arch/i386/page.h>
-#include <kernel/arch/i386/page_table.h>
+#include <kernel/i386/page.h>
+#include <kernel/i386/page_table.h>
 
-struct pdg_t global_page_dir[1024]
+pgd_t global_page_dir[1024] __attribute__((__sections__(".bss")))= { {0}, }; 
+

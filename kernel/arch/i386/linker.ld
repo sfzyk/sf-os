@@ -14,7 +14,7 @@ SECTIONS
 	/* First put the multiboot header, as it is required to be put very early
 	   early in the image or the bootloader won't recognize the file format.
 	   Next we'll put the .text section. */
-	_kernel_physical_address_start = . ;
+	__kernel_physical_address_start = . ;
 
 	.boottext :
 	{
@@ -65,7 +65,7 @@ SECTIONS
 	}
 	__kernel_virtual_address_end = . ;
 
-	pg0 = .;  //temperal page table just two table for first 8M memory 
+	/* pg0 = .;  /*temperal page table just two table for first 8M memory */
 
 	/* The compiler may produce other sections, put them in the proper place in
 	   in this file, if you'd like to include them in the final kernel. */
