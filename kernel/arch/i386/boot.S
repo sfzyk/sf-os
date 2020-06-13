@@ -31,6 +31,17 @@ pg0:
 .global _start
 .type _start, @function
 _start:
+	#change segment 
+	lgdt cpu_gdt_descr
+	mov $(__KERNEL_DS), %eax 
+	mov %eax, %ds
+	mov %eax, %es
+	mov %eax, %fs
+	mov %eax, %gs
+	mov %eax, %ss
+	ljmp $(__KERNEL_CS), $1f
+1:
+
 	# enable pageing 
 	movl $pg0, %eax 
 	movl $global_page_dir - 0xc0000000 ,%ebx
@@ -38,25 +49,24 @@ _start:
 	movl %edx, (%ebx)
 	movl %edx, 0xc00(%ebx)
 1:
-	movl 0x007, %eax 
+	movl $0x007, %eax 
 	movl $pg0, %edi 
 	cld 
 	movl $1024, %ecx
 2:
 	stosl
-	addl 0x1000, %eax 
+	addl $0x1000, %eax 
 	loop 2b
 
 	movl $global_page_dir - 0xc0000000 ,%eax 
 	movl %eax, %cr3 
+
 	movl %cr0, %eax 
-	orl %eax, 0x80000000
+	orl  $0x80000000, %eax
 	movl %eax, %cr0
-	ljmp $__KERNEL_CS, $3f
-3:
+	
 
 	movl $stack_top, %esp
-
 	# Call the global constructors.
 	call _init
 

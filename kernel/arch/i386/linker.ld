@@ -11,9 +11,7 @@ SECTIONS
 	/* Begin putting sections at 1 MiB, a conventional place for kernels to be
 	   loaded at by the bootloader. */
 	. = 1M;
-	/* First put the multiboot header, as it is required to be put very early
-	   early in the image or the bootloader won't recognize the file format.
-	   Next we'll put the .text section. */
+ 
 	__kernel_physical_address_start = . ;
 
 	.boottext :
@@ -21,10 +19,12 @@ SECTIONS
 		arch/i386/boot.o (.multiboot)
 		arch/i386/boot.o (.text)
 	}
+	
 	.bootrodata :
 	{
 		arch/i386/boot.o (.rodata)
 	}
+
 	.bootdata :
 	{
 		arch/i386/boot.o (.data)
@@ -35,7 +35,7 @@ SECTIONS
 		arch/i386/boot.o (.bss)
 		arch/i386/boot.o (COMMON)
 	}
-	
+
 	_boot_end = . ;
 
 	. += 0xc0000000 ;
@@ -60,6 +60,7 @@ SECTIONS
 	/* Read-write data (uninitialized) and stack */
 	.bss BLOCK(4K) : AT( (LOADADDR(.data) + SIZEOF(.data)+ 0xfff)&0xcffff000 ) ALIGN(4K)  
 	{
+		*(.bss.pagedir)
 		*(COMMON)
 		*(.bss)
 	}

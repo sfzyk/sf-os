@@ -6,7 +6,7 @@
 void segment_init();
 
 void kernel_main(void) {
-	terminal_initialize();
 	segment_init();
+	terminal_initialize();
 	printf("Hello, kernel World!\n");
 }

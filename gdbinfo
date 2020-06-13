@@ -1,0 +1,3 @@
+file sysroot/boot/sf-os.kernel
+target remote :1234
+l _start 
