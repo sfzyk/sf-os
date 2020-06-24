@@ -3,12 +3,12 @@
 #include <i386/config.h> 
 #include <i386/linkage.h>
 #include <kernel/vsnprintf.h> 
-
+#include <kernel/printk.h>
 
 #define LOG_BUF_LEN (1 << CONFIG_LOG_BUG_SHIFT )
 #define LOG_BUF_MASK (LOG_BUF_LEN - 1 )
 
-static char __log_buf_ [LOG_BUF_LEN];
+static char __attribute__((used)) __log_buf_ [LOG_BUF_LEN];
 
 #define LOG_BUF(idx) (__log_buf_[(idx)&LOG_BUF_MASK])
 static unsigned long log_start = 0;
@@ -28,9 +28,10 @@ void emit_log_char(char c){
     }
 }
 
-void asmlinkage printk(const char* fmt, ...){
+int asmlinkage printk(const char* restrict fmt, ...){
     va_list args;
-    va_start(fmt, args);
+    va_start(args, fmt);
+
     static char log_buf[1024];
     static char *p;
     static int unknown_log_level = 1 ; 
@@ -55,7 +56,8 @@ void asmlinkage printk(const char* fmt, ...){
         todo :
         call console to out put the log message 
     */
-    va_end(fmt);
+    va_end(args);
+    return 1;
 }
 
 

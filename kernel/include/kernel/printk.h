@@ -1,4 +1,5 @@
 #ifndef __PRINTK_H__
 #define __PRINTK_H__
-void asmlinkage printk(const char fmt, ...);
+#include <i386/linkage.h>
+int asmlinkage printk(const char* restrict fmt, ...);
 #endif 

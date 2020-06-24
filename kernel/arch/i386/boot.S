@@ -51,7 +51,7 @@ _start:
 	movl $global_page_dir - 0xc0000000 ,%ebx
 	leal 0x007(%eax), %edx  #page dir entry 
 	movl %edx, (%ebx)
-	movl %edx, 0xc00(%ebx) #that is 0xc00 not 0x300 costs me 3 hours, fx
+	movl %edx, 0xc00(%ebx) #that is 0xc00 not 0x300 ,cost me 3 hours, fx
 1:
 	movl $0x007, %eax 
 	movl $pg0, %edi 
