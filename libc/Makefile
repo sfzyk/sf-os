@@ -33,6 +33,7 @@ stdio/printf.o \
 stdio/putchar.o \
 stdio/puts.o \
 stdlib/abort.o \
+stdlib/ctype.o \
 string/memcmp.o \
 string/memcpy.o \
 string/memmove.o \
@@ -48,8 +49,8 @@ $(HOSTEDOBJS) \
 
 LIBK_OBJS=$(FREEOBJS:.o=.libk.o) #???
 
-#BINARIES=libc.a libk.a # Not ready for libc yet.
-BINARIES=libk.a
+BINARIES=libc.a libk.a # Not ready for libc yet.
+#BINARIES=libk.a
 
 .PHONY: all clean install install-headers install-libs
 .SUFFIXES: .o .libk.o .c .S

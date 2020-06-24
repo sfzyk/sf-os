@@ -3,4 +3,6 @@
 
 #define __sfos_libc 1
 
+typedef long unsigned int size_t;
+
 #endif

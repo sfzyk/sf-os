@@ -1,5 +1,5 @@
 #include <kernel/segment.h>
-#include <kernel/i386/page.h>
+#include <i386/page.h>
 
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
@@ -33,21 +33,25 @@ pg0:
 _start:
 	#change segment 
 	lgdt cpu_gdt_descr
-	mov $(__KERNEL_DS), %eax 
-	mov %eax, %ds
-	mov %eax, %es
-	mov %eax, %fs
-	mov %eax, %gs
-	mov %eax, %ss
+	mov $(__KERNEL_DS), %ecx 
+	mov %ecx, %ds
+	mov %ecx, %es
+	mov %ecx, %fs
+	mov %ecx, %gs
+	mov %ecx, %ss
 	ljmp $(__KERNEL_CS), $1f
 1:
+	movl $stack_top, %esp   
+	pushl  %eax
+	pushl  %ebx 
+	#detected memory map
 
 	# enable pageing 
 	movl $pg0, %eax 
 	movl $global_page_dir - 0xc0000000 ,%ebx
 	leal 0x007(%eax), %edx  #page dir entry 
 	movl %edx, (%ebx)
-	movl %edx, 0xc00(%ebx)
+	movl %edx, 0xc00(%ebx) #that is 0xc00 not 0x300 costs me 3 hours, fx
 1:
 	movl $0x007, %eax 
 	movl $pg0, %edi 
@@ -65,8 +69,9 @@ _start:
 	orl  $0x80000000, %eax
 	movl %eax, %cr0
 	
-
-	movl $stack_top, %esp
+	#init for idt table 
+	call setup_ign_idt
+	
 	# Call the global constructors.
 	call _init
 
@@ -78,6 +83,22 @@ _start:
 4:	hlt
 	jmp 4b
 
+
+# must be called after pageing enabled 
+setup_ign_idt:
+	movl $(__KERNEL_CS << 16), %eax 
+	movl $ignore_int, %ebx 
+	movw %bx, %ax 
+	movw $0x8e00, %bx
+
+	movl $256, %ecx 
+	movl $idt_table, %edx
+rep_set_idt:
+	movl %eax, (%edx)
+	movl %ebx, 4(%edx)
+	addl $8,%edx
+	loop rep_set_idt
+	ret 
 
 ignore_int:
 	cld
