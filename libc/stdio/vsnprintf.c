@@ -224,10 +224,9 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 					++str;
 				}
 				continue;
-
 			case 's':
 				s = va_arg(args, char *);
-				if ((unsigned long)s < PAGE_SIZE)
+				if ((unsigned long)s < PAGE_SIZE)  // ?? if s in user space, s= NULL
 					s = "<NULL>";
 
 				len = strnlen(s, precision);
