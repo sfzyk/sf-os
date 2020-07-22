@@ -1,4 +1,3 @@
 file sysroot/boot/sf-os.kernel
 target remote :1234
-l printk
-b 40 
+l kernel_main 
