@@ -9,6 +9,5 @@ struct desc_struct  {
         (!(x->a+x->b))
 #define desc_equal(x,y) \
         ((x->a==y->a)&(x->b==y->b))
-
         
 #endif 
