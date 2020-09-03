@@ -24,6 +24,10 @@ void print_mem_map(multiboot_memory_map_t *a){
     }
 }
 
+void page_init(){
+
+}
+
 void print_mempry_map_with_grub2(multiboot_info_t* mdb){
 
     if(mdb->flags & MULTIBOOT_INFO_MEMORY ){

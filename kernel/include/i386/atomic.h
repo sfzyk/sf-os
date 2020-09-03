@@ -22,7 +22,7 @@ static inline atomic_sub(atomic_t* v,int i){
         "subl %1, %0"
         :"=m"((v)->counter)
         :"ir"(i),"m"((v)->counter)
-    )
+    );
 }
 
 /*
@@ -33,9 +33,9 @@ static inline atomic_sub_and_test(atomic_t *v,int i){
     unsigned char c;
     __asm__ __volatile__ (
         "subl %2, %0; sete %1"
-        :"=m"(v->counter), "=qm" c
+        :"=m"(v->counter), "=qm"(c)
         :"qm"(i), "m"(v->counter): "memory"
-    )
+    );
     return c;
 }
 

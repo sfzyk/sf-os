@@ -2,39 +2,40 @@
 #define __MM_H__
 #include <i386/atomic.h>
 #include <kernel/list.h>
+#include <i386/config.h>
+
+#define MAX_ORDER 11 
+#define MAX_NR_ZONES 3
+#define MAX_NUMNODES 1 
+
+
+struct free_area{
+	struct list_head head;
+	unsigned long nr_free;
+};
+
+struct per_cpu_pages{
+	int count;
+	int low;
+	int high;
+	int batch;    // num to add or remove 
+	struct list_head list;
+};
+
+struct per_cpu_pageset{
+	struct per_cpu_pages pcp[2];
+};
 
 
 
-#define PG_locked	 	 0	/* Page is locked. Don't touch. */
-#define PG_error		 1
-#define PG_referenced		 2
-#define PG_uptodate		 3
-
-#define PG_dirty	 	 4
-#define PG_lru			 5
-#define PG_active		 6
-#define PG_slab			 7	/* slab debug (Suparna wants this) */
-
-#define PG_highmem		 8
-#define PG_checked		 9	/* kill me in 2.5.<early>. */
-#define PG_arch_1		10
-#define PG_reserved		11
-
-#define PG_private		12	/* Has something at ->private */
-#define PG_writeback		13	/* Page is under writeback */
-#define PG_nosave		14	/* Used for system suspend/resume */
-#define PG_compound		15	/* Part of a compound page */
-
-#define PG_swapcache		16	/* Swap page: swp_entry_t in private */
-#define PG_mappedtodisk		17	/* Has blocks allocated on-disk */
-#define PG_reclaim		18	/* To be reclaimed asap */
-#define PG_nosave_free		19	/* Free, should not be written */
-
-
-struct zone{
+struct zone {
     unsigned long free_pages;
     unsigned long pages_min, pages_low, pages_high;
-    unsigned long lowmem_reserve[MAX_NR_ZONES];
+
+	struct free_area free_area[MAX_ORDER];// use by buddy system 
+    unsigned long lowmem_reserve[MAX_NR_ZONES]; // ? a zone contains all
+
+	struct per_cpu_pageset pageset[NR_CPU];
 
     struct list_head	active_list;
 	struct list_head	inactive_list;
@@ -45,7 +46,9 @@ struct zone{
 	unsigned long		pages_scanned;	   /* since last reclaim */
 	int			all_unreclaimable; /* All pages pinned */
 
-    struct pglist_data	*zone_pgdat;
+    struct pglist_data	*pglist;
+
+
 	struct page		*zone_mem_map;
 	/* zone_start_pfn == zone_start_paddr >> PAGE_SHIFT */
 	unsigned long		zone_start_pfn;
@@ -53,7 +56,7 @@ struct zone{
 	unsigned long		spanned_pages;	/* total size, including holes */
 	unsigned long		present_pages;	/* amount of memory (excluding holes) */
 
-}
+};
 
 struct zonelist {
 	struct zone *zones[MAX_NUMNODES * MAX_NR_ZONES + 1]; // NULL delimited
@@ -70,7 +73,7 @@ typedef struct pglist_data{
 	unsigned long node_spanned_pages; /* total size of physical page
 					     range, including holes */
 	int node_id;
-}
+};
 
 
 
@@ -81,18 +84,14 @@ struct page{
 
     atomic_t _mapcount; // page entry in page ? 
 
-    unsigned long private;// 
+    unsigned long private;// page order in 
 
     struct address_space * mmapping ; 
 
     unsigned long index;
 
-    struct list_head lru;
-}
-
-
-
-
+    struct list_head lru;// struct list_head when page is free 
+};
 
 #endif 
 
