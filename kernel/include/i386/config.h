@@ -6,4 +6,6 @@
 #define NR_CPU (1)
 
 #define NULL (0)
+
+#define CONFIG_HIHMEM
 #endif 

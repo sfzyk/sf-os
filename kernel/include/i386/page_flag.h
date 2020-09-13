@@ -2,6 +2,12 @@
 #define __PAGE_FLAG_H__
 
 #include <i386/bitops.h>
+#include <i386/config.h>
+
+#define PAGE_SHIFT  (12)
+#define PFN_UP(x)	(((x) + PAGE_SIZE-1) >> PAGE_SHIFT)
+#define PFN_DOWN(x)	((x) >> PAGE_SHIFT)
+#define PFN_PHYS(x)	((x) << PAGE_SHIFT)
 
 // zone flags 
 /* Zone modifiers in GFP_ZONEMASK (see linux/mmzone.h - low two bits) */
@@ -138,8 +144,18 @@ struct page_state {
 #define SetPagePrivate(page)	set_bit(PG_private, &(page)->flags)
 #define ClearPagePrivate(page)	clear_bit(PG_private, &(page)->flags)
 #define PagePrivate(page)	test_bit(PG_private, &(page)->flags)
-#define __SetPagePrivate(page)  __set_bit(PG_private, &(page)->flags)
+
+/* no difference between SetPagePrivate and __SetPagePrivete by sf*/
+#define __SetPagePrivate(page)  set_bit(PG_private, &(page)->flags)
 #define __ClearPagePrivate(page) __clear_bit(PG_private, &(page)->flags)
+
+
+
+#ifdef CONFIG_HIGHMEM
+#define PageHighMem(page)	test_bit(PG_highmem, &(page)->flags)
+#else
+#define PageHighMem(page)	0 /* needed to optimize away at compile time */
+#endif
 
 
 #endif 

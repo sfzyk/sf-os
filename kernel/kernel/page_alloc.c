@@ -52,8 +52,8 @@ static struct page * __rmqueue(struct zone * z ,int order ){
 }
 
 /*
-return allocated number 
-and add entry to list tail 
+* return allocated number 
+* and add entry to list tail 
 */
 static int rmqueue_bulk(struct zone* z, int order , int count ,struct list_head *list ){
     struct page * pg ;
@@ -68,14 +68,21 @@ static int rmqueue_bulk(struct zone* z, int order , int count ,struct list_head 
         allocated ++ ;
     }
     return allocated;
+
+}
+
+static inline void __free_pages_bulk(struct zone* z , struct page * page , struct page * base , int order ){
+    unsigned long idx;
+
+
 }
 
 /*
-eg cold or hot buffer 
-todo : 
-    mod pagestate 
-
-zone : page reside in 
+* eg cold or hot buffer 
+* todo : 
+*    mod pagestate 
+*
+* zone : page reside in 
 */
 static struct page*  buffered_rmqueue(struct zone *zone, int order,int gfp_flags){
     unsigned long flags;
@@ -90,7 +97,7 @@ static struct page*  buffered_rmqueue(struct zone *zone, int order,int gfp_flags
         }
 
         if(pcp->count){
-            pg = list_entry(&pcp->list->next,struct page , lru );
+            pg = list_entry(&(pcp->list.next),struct page , lru );
             pcp->count--; 
         }
         put_cpu();
@@ -140,6 +147,6 @@ struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zo
     got_pg:
         return pg;
     nopg:
-        
-
+        return -1;
 }
+

@@ -1,5 +1,6 @@
 #include <kernel/setup.h>
 #include <kernel/multiboot.h>
+#include <i386/mm.h>
 #include <stdio.h> 
 
 
@@ -24,9 +25,7 @@ void print_mem_map(multiboot_memory_map_t *a){
     }
 }
 
-void page_init(){
-
-}
+extern void mm_page_init(multiboot_info_t *);
 
 void print_mempry_map_with_grub2(multiboot_info_t* mdb){
 
@@ -97,7 +96,7 @@ void print_mempry_map_with_grub2(multiboot_info_t* mdb){
 void setup_arch(multiboot_info_t* mdb_info){
     print_mempry_map_with_grub2(mdb_info);
 
-    page_init();
-    
+    mm_page_init(mdb_info);
 
+    
 }
