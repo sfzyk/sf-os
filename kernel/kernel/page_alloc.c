@@ -116,6 +116,9 @@ static struct page*  buffered_rmqueue(struct zone *zone, int order,int gfp_flags
 }
 
 
+void free_page(struct page * pg){
+    __free_pages(pg,0);
+}
 /********************************************************************************************************************************
  *              
  * 

@@ -3,6 +3,7 @@
 
 #include <i386/bitops.h>
 #include <i386/config.h>
+ 
 
 #define PAGE_SHIFT  (12)
 #define PFN_UP(x)	(((x) + PAGE_SIZE-1) >> PAGE_SHIFT)

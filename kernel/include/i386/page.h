@@ -2,7 +2,7 @@
 #define __I386_PAGE_H__
 
 
-#define page_offset (0xc00000000)
+#define page_offset (0xc0000000)
 #define PAGE_SHIFT 12 
 #define PAGE_SIZE (1UL << PAGE_SHIFT)
 #define PAGE_MASK (~(PAGE_SIZE-1))
@@ -14,6 +14,7 @@
     #define __pa(x)			((unsigned long)(x)-PAGE_OFFSET)
     #define __va(x)			((void *)((unsigned long)(x)+PAGE_OFFSET))
     #define pfn_to_kaddr(pfn)      __va((pfn) << PAGE_SHIFT)
+    #define kaddr_to_pfn(kaddr)    ((__pa(kaddr)) >> PAGE_SHIFT)
 
     extern struct page* mem_map;
     #define pfn_to_page(pfn)	(mem_map + (pfn))

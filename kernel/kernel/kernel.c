@@ -6,7 +6,7 @@
 #include <kernel/printk.h>
 #include <kernel/setup.h>
 
-
+extern unsigned int *page_start;
 void segment_init();
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
@@ -16,4 +16,5 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
 	printk("LINUX GREAT START SF!!!\n\n");
 	printf("Hello, kernel World!\n");
+
 }
