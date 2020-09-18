@@ -1,6 +1,7 @@
 #ifndef __PAGE_TABLE_H__
 #define __PAGE_TABLE_H__
 #include <i386/page.h>
+#include <i386/atomic.h>
 
 typedef struct { unsigned long pgprot; } pgprot_t;
 #define __pgprot(x)	((pgprot_t) { (x) } )
@@ -83,7 +84,7 @@ typedef unsigned long pte;
 #define PTRS_PER_PTE (1<<10)
 
 #define pgd_index(address) (((address)>>PGDIR_SHIFT)&(PTRS_PER_PGD - 1))
-
+#define page_count(p)		(atomic_read(&(p)->_count) + 1)
 
 #define pfn_pte(pfn, v) _pte(pfn<<PAGE_SHIFT|v) 
 

@@ -38,32 +38,36 @@ SECTIONS
 
 	_boot_end = . ;
 
-	. += 0xc0000000 ;
+	. += 0xc0000000 ; 
 	__kernel_virtual_address_start = . ;
+
+
 	.text BLOCK(4K) :  AT(_boot_end) ALIGN(4K)
 	{
 		*(.text)
 	}
-
-	/* Read-only data. */
+	
+	 
 	.rodata BLOCK(4K) : AT(((LOADADDR(.text)+SIZEOF(.text) + 0xfff) & 0xcffff000)) ALIGN(4K)
 	{
 		*(.rodata)
 	}
 
-	/* Read-write data (initialized) */
+
 	.data BLOCK(4K) :  AT(((LOADADDR(.rodata)+SIZEOF(.rodata) + 0xfff) & 0xcffff000)) ALIGN(4K) 
 	{
 		*(.data)
 	}
 
-	/* Read-write data (uninitialized) and stack */
+	
 	.bss BLOCK(4K) : AT( (LOADADDR(.data) + SIZEOF(.data)+ 0xfff)&0xcffff000 ) ALIGN(4K)  
 	{
-		*(.bss.pagedir)
-		*(COMMON)
+		*(.bss.pagedir)   /*page table must aligned at 256 byte at least*/
 		*(.bss)
+		*(COMMON)	
 	}
+	
+	 
 	__kernel_virtual_address_end = . ;
 
 	page_start = .;  /*temperal page table just two table for first 8M memory */

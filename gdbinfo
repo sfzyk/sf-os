@@ -1,4 +1,2 @@
 file sysroot/boot/sf-os.kernel
 target remote :1234
-l mm_page_init
-b 32 

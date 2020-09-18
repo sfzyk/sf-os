@@ -10,8 +10,16 @@
 #define HIGH_ZONE 2
 
 #define MAX_ORDER 11 
+
 #define MAX_NR_ZONES 3
 #define MAX_NUMNODES 1 
+
+/*
+dont support numa for now 
+*/
+
+#define TYPE_ZONES_SHIFT 2 
+#define NUMNODES_SHIFT 0 
 
 #define GFP_ZONETYPES 3
 
@@ -87,10 +95,12 @@ typedef struct pglist_data{
 	int node_id;
 }pg_data_t;
 
+typedef unsigned long pg_flags_t;
 
+#define NODEZONE_SHIFT (sizeof(pg_flags_t)*8 - MAX_NR_ZONES - MAX_NUMNODES)
 
 struct page{
-    unsigned long flags; //page status flags
+    pg_flags_t flags; //page status flags
 
     atomic_t _count; // page refence count
 
@@ -106,7 +116,7 @@ struct page{
 };
 
 void mm_page_init(multiboot_info_t* );
-void node_alloc_mem_map(struct pglist_data*);
+void node_alloc_mem_map(struct pglist_data*,unsigned int *);
 
 
 #endif 

@@ -11,7 +11,7 @@ struct list_head{
 #define list_entry(list_head ,type ,member)  (type *)((char *)list_head - offsetof(type,member))
 
 
-#define init_list (ptr) do{\
+#define init_list(ptr) do{\
     (ptr)->prev = (ptr);(ptr) -> next = (ptr);\
 } while(0)
 

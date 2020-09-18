@@ -20,7 +20,6 @@
 stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
-
 .align 4096
 pg0: 
 .fill 2048,4,0 
@@ -67,7 +66,11 @@ _start:
 
 	movl %cr0, %eax 
 	orl  $0x80000000, %eax
-	movl %eax, %cr0
+	movl %eax, %cr0  # into chaos
+	
+	mov %cr3, %eax
+	mov %cr0, %eax 
+	
 	
 	#init for idt table 
 	call setup_ign_idt
