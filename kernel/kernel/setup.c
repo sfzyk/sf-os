@@ -94,9 +94,10 @@ void print_mempry_map_with_grub2(multiboot_info_t* mdb){
     }
 }
 void setup_arch(multiboot_info_t* mdb_info){
+    
     print_mempry_map_with_grub2(mdb_info);
 
     mm_page_init(mdb_info);
-    
+
     
 }

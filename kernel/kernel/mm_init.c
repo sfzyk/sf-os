@@ -22,7 +22,7 @@ free_page(struct page*);
 *
 */
 int is_kernel_text(unsigned int address){
-    return address > page_offset && address < __kernel_virtual_address_end;
+    return address > PAGE_OFFSET && address < __kernel_virtual_address_end;
 }
 
 /*
@@ -33,15 +33,19 @@ int is_kernel_text(unsigned int address){
 *
 */
 void init_page_table(pgd_t *pgd_base,pte_t* pte_base){
-    int pgd_start_index = pgd_index(page_offset);
-    pgd_t * pgd = pte_base + pgd_start_index;
+   
+    int pgd_start_index = pgd_index(PAGE_OFFSET);
+   
+
+    pgd_t * pgd = pgd_base + pgd_start_index;
     pte_t * pte = pte_base;
+
 
     int pfn = 0;
     for(;pgd_start_index < PTRS_PER_PGD;pgd++,pgd_start_index++){
-        unsigned int address = pfn* PAGE_SIZE + page_offset ;
+        unsigned int address = pfn* PAGE_SIZE + PAGE_OFFSET ;
 
-        for(int pte_ofs=0;pte_ofs<PTRS_PER_PTE;pte++, pte_ofs++){
+        for(int pte_ofs=0;pte_ofs<PTRS_PER_PTE;pte++, pte_ofs++,pfn++ ){
 
             if(is_kernel_text(address)){
                 set_pte(pte, pfn_pte(pfn, _PAGE_KERNEL_EXEC));
@@ -50,9 +54,12 @@ void init_page_table(pgd_t *pgd_base,pte_t* pte_base){
             }
 
         }
-        set_pgd(pgd, _pgd(pte_base));// set swappage dir
+        
+        pte_t * page_table_tmp  =  (((unsigned long )pte_base&(PAGE_MASK))|0x27) - PAGE_OFFSET; /*  () matters!  */
+        set_pgd(pgd, _pgd(page_table_tmp));// set swappage dir
         pte_base = pte;
     }
+    
     page_desc_start = pte;
 }
 
@@ -136,6 +143,7 @@ void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
             SetPageReserved(&mem_map[i] );
             atomic_set(&mem_map[i]._count, -1);
         }    
+
         mem_map[i].private = -1;
         free_page(&mem_map[i]);
     }

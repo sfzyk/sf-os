@@ -7,7 +7,7 @@
 
 
 extern pgd_t global_page_dir[1024];
-extern pte_t  page_start;
+extern pte_t *page_start;
 extern struct pglist_data global_mem_node;
 struct page* mem_map;
 struct zone* zone_table[1 <<(MAX_NR_ZONES *MAX_NUMNODES)+1]; // ? 
@@ -32,6 +32,11 @@ static inline void find_pfn_layout(multiboot_info_t *mdb){
         mmap_pointer=(multiboot_memory_map_t *)(((char *)mmap_pointer )+ mmap_pointer->size + 4);
     }
 
+    /*  
+        decided here 
+    */
+
+   max_low_pfn = PFN_DOWN(MAX_LOW_MEM);
 }
 
 
@@ -52,19 +57,22 @@ void mm_page_init(multiboot_info_t* mdb){
     /* pfn staff */
     find_pfn_layout(mdb);
 
-    init_page_table(global_page_dir, &page_start);
+    page_start = ((unsigned long)&page_start + (~PAGE_MASK) ) & (PAGE_MASK);
+
+    init_page_table(global_page_dir, page_start);
+
 
     laod_cr3(global_page_dir);
 
     __flush_tlb();
-    zone_init_free_lists(&global_mem_node);
 
+    zone_init_free_lists(&global_mem_node);
     /*
-    *
     *  buddy system and page zone allocator init  
     */
     zone_sizes_init();
 
-    printf("page management have been completed!!");
+    printf("page management have been completed!!\n");
+
     return ;
 }
