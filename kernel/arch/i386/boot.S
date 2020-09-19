@@ -47,7 +47,7 @@ _start:
 
 	# enable pageing 
 	movl $pg0, %eax 
-	movl $global_page_dir - 0xc0000000 ,%ebx
+	movl $global_page_dir - PAGE_OFFSET ,%ebx
 	leal 0x007(%eax), %edx  #page dir entry 
 	movl %edx, (%ebx)
 	movl %edx, 0xc00(%ebx) #that is 0xc00 not 0x300 ,cost me 3 hours, fx
@@ -67,7 +67,7 @@ _start:
 	movl %cr0, %eax 
 	orl  $0x80000000, %eax
 	movl %eax, %cr0  # into chaos
-	
+
 	mov %cr3, %eax
 	mov %cr0, %eax 
 	
