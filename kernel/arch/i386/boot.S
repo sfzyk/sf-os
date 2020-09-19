@@ -53,7 +53,7 @@ _start:
 	movl %edx, (%ebx)
 	movl %edx, 0xc00(%ebx) #that is 0xc00 not 0x300 ,cost me 3 hours, fx
 1:
-	movl $0x007, %eax 
+	movl $0x007, %eax
 	movl $pg0, %edi 
 	cld 
 	movl $1024, %ecx
