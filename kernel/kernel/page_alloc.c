@@ -3,8 +3,13 @@
 #include <i386/percpu.h>
 #include <i386/smp.h>
 #include <i386/config.h>
+#include <i386/page_table.h>
 static DEFINE_PER_CPU(struct page_state, page_state ) = { 0}; 
 
+
+static inline struct zone* page_zone(struct page* pg){
+    return (pg->flags >> NODEZONE_SHIFT);
+}
 
 static inline unsigned long page_order(struct page* pg){
     return pg->private;
@@ -52,8 +57,8 @@ static struct page * __rmqueue(struct zone * z ,int order ){
 }
 
 /*
-return allocated number 
-and add entry to list tail 
+* return allocated number 
+* and add entry to list tail 
 */
 static int rmqueue_bulk(struct zone* z, int order , int count ,struct list_head *list ){
     struct page * pg ;
@@ -68,14 +73,21 @@ static int rmqueue_bulk(struct zone* z, int order , int count ,struct list_head 
         allocated ++ ;
     }
     return allocated;
+
+}
+
+static inline void __free_pages_bulk(struct zone* z , struct page * page , struct page * base , int order ){
+    unsigned long idx;
+
+
 }
 
 /*
-eg cold or hot buffer 
-todo : 
-    mod pagestate 
-
-zone : page reside in 
+* eg cold or hot buffer 
+* todo : 
+*    mod pagestate 
+*
+* zone : page reside in 
 */
 static struct page*  buffered_rmqueue(struct zone *zone, int order,int gfp_flags){
     unsigned long flags;
@@ -90,7 +102,7 @@ static struct page*  buffered_rmqueue(struct zone *zone, int order,int gfp_flags
         }
 
         if(pcp->count){
-            pg = list_entry(&pcp->list->next,struct page , lru );
+            pg = list_entry(&(pcp->list.next),struct page , lru );
             pcp->count--; 
         }
         put_cpu();
@@ -108,7 +120,65 @@ static struct page*  buffered_rmqueue(struct zone *zone, int order,int gfp_flags
     return pg;
 }
 
+/*
+* 
+*/
+static inline int page_is_buddy(struct page *page, int order)
+{
+       if (PagePrivate(page)           &&
+           (page_order(page) == order) &&
+           !PageReserved(page)         &&
+            page_count(page) == 0)
+               return 1;
+       return 0;
+}
 
+static inline int not_in_zone(struct zone* z, struct page* pg){
+    if(pg<z->zone_mem_map || pg>z->zone_mem_map+z->spanned_pages){
+        return 1;
+    }
+    return 0;
+}
+/*
+* supposed to check page _count == 0 but 
+*
+*/
+
+void __free_pages(struct page* pg, unsigned int order){
+    struct zone* zone = page_zone(pg);
+    struct page* base = zone->zone_mem_map;
+    unsigned int pg_idx = pg - base;
+    int order_size = 1 << order; 
+    int buddy_idx;
+    while(order < MAX_ORDER){
+        buddy_idx  = (pg_idx ^( 1<<order ));
+        struct page* buddy = base + buddy_idx;
+
+        if(not_in_zone(zone,buddy))
+        break;
+        if(!page_is_buddy(pg_idx,order))
+        break;
+
+        list_del(& buddy->lru);
+        struct free_area* area = &zone->free_area[order];
+        area->nr_free --;
+        pg_idx &= buddy_idx;
+        order ++;
+    }
+
+    struct page* col = base + buddy_idx;
+    set_page_order(col,order);
+    list_add(&col->lru, &zone->free_area[order].head);
+	zone->free_area[order].nr_free++;
+}
+
+/*
+* short cut for one page 
+*/
+
+void free_page(struct page * pg){
+    __free_pages(pg,0);
+}
 /********************************************************************************************************************************
  *              
  * 
@@ -140,6 +210,6 @@ struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zo
     got_pg:
         return pg;
     nopg:
-        
-
+        return -1;
 }
+

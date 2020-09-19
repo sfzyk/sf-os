@@ -3,5 +3,6 @@
 // for asm use 
 
 #define asmlinkage __attribute__((regparm(0)))
+//  #define __init__ __atrribute__((_sections("in")))
 
 #endif 

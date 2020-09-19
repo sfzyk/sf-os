@@ -30,7 +30,9 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
-kernel/segment.o kernel/interrupt.o  kernel/printk.o kernel/setup.o \
+kernel/segment.o kernel/interrupt.o \
+kernel/printk.o kernel/setup.o \
+kernel/mm_init.o kernel/page_alloc.o
 
 OBJS=\
 $(ARCHDIR)/crti.o \
@@ -64,7 +66,7 @@ $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
 	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
 .S.o:
-	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+	$(CC) -D__ASM__ -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 clean:
 	rm -f sf-os.kernel

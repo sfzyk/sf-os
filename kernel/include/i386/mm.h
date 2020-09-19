@@ -3,10 +3,29 @@
 #include <i386/atomic.h>
 #include <kernel/list.h>
 #include <i386/config.h>
+#include <kernel/multiboot.h>
+
+#define DMA_ZONE 0
+#define NORMAL_ZONE 1
+#define HIGH_ZONE 2
 
 #define MAX_ORDER 11 
+
 #define MAX_NR_ZONES 3
 #define MAX_NUMNODES 1 
+
+/*
+dont support numa for now 
+*/
+
+#define TYPE_ZONES_SHIFT 2 
+#define NUMNODES_SHIFT 0 
+
+#define GFP_ZONETYPES 3
+
+
+
+struct page;
 
 
 struct free_area{
@@ -26,7 +45,7 @@ struct per_cpu_pageset{
 	struct per_cpu_pages pcp[2];
 };
 
-
+ 
 
 struct zone {
     unsigned long free_pages;
@@ -62,23 +81,26 @@ struct zonelist {
 	struct zone *zones[MAX_NUMNODES * MAX_NR_ZONES + 1]; // NULL delimited
 };
 
-struct page;
+
 typedef struct pglist_data{
 	struct zone node_zones[MAX_NR_ZONES];
 	struct zonelist node_zonelists[GFP_ZONETYPES];
 	int nr_zones;
 	struct page* node_mem_map;
 	unsigned long node_start_pfn;
+
 	unsigned long node_present_pages; /* total number of physical pages */
 	unsigned long node_spanned_pages; /* total size of physical page
 					     range, including holes */
 	int node_id;
-};
+}pg_data_t;
 
+typedef unsigned long pg_flags_t;
 
+#define NODEZONE_SHIFT (sizeof(pg_flags_t)*8 - MAX_NR_ZONES - MAX_NUMNODES)
 
 struct page{
-    unsigned long flags; //page status flags
+    pg_flags_t flags; //page status flags
 
     atomic_t _count; // page refence count
 
@@ -92,6 +114,10 @@ struct page{
 
     struct list_head lru;// struct list_head when page is free 
 };
+
+void mm_page_init(multiboot_info_t* );
+void node_alloc_mem_map(struct pglist_data*,unsigned int *);
+
 
 #endif 
 
