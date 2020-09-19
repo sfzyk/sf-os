@@ -62,7 +62,7 @@ SECTIONS
 	
 	.bss BLOCK(4K) : AT( (LOADADDR(.data) + SIZEOF(.data)+ 0xfff)&0xcffff000 ) ALIGN(4K)  
 	{
-		*(.bss.pagedir)   /*page table must aligned at 256 byte at least*/
+		*(.bss.pagedir)   /* page table must aligned at 256 byte at least : please see i386 manual */
 		*(.bss)
 		*(COMMON)	
 	}

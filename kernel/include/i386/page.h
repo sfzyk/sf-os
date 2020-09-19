@@ -25,4 +25,8 @@
     }
 
 #endif 
+#define page_mask  ((1<<PAGE_SHIFT )-1 )
+#define VMALLOC_REVERSE (128 << 20)
+#define MAX_LOW_MEM (-page_offset - VMALLOC_REVERSE)
+
 #endif 

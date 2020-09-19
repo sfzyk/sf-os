@@ -196,7 +196,7 @@ struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zo
 
     for(int i =0;(z=zones[i]!=0);i++ ){
 
-        pg = buffered_rmqueue(z,order,gfp_mask);
+        pg = buffered_rmqueue(z,order,gfp_mask); // ? 
 
         if(pg){
             goto got_pg;
