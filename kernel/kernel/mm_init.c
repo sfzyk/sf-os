@@ -55,7 +55,7 @@ void init_page_table(pgd_t *pgd_base,pte_t* pte_base){
 
         }
         
-        pte_t * page_table_tmp  =  (((unsigned long )pte_base&(PAGE_MASK))|0x27) - PAGE_OFFSET; /*  () matters!  */
+        pte_t * page_table_tmp  =  (((unsigned long )pte_base&(PAGE_MASK))|_PAGE_RW|_PAGE_PRESENT) - PAGE_OFFSET; /*  () matters!  */
         set_pgd(pgd, _pgd(page_table_tmp));// set swappage dir
         pte_base = pte;
     }
