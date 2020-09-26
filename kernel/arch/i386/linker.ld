@@ -62,7 +62,7 @@ SECTIONS
 	
 	.bss BLOCK(4K) : AT( (LOADADDR(.data) + SIZEOF(.data)+ 0xfff)&0xcffff000 ) ALIGN(4K)  
 	{
-		*(.bss.pagedir)   /*page table must aligned at 256 byte at least*/
+		*(.bss.pagedir)   /* page table must aligned at 256 byte at least : please see i386 manual */
 		*(.bss)
 		*(COMMON)	
 	}
@@ -70,8 +70,8 @@ SECTIONS
 	 
 	__kernel_virtual_address_end = . ;
 
-	page_start = .;  /*temperal page table just two table for first 8M memory */
-
+	page_start = .;  
+	/*temperal page table just two table for first 8M memory */
 	/* The compiler may produce other sections, put them in the proper place in
 	   in this file, if you'd like to include them in the final kernel. */
 }
