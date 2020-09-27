@@ -2,6 +2,7 @@ DEFAULT_HOST!=../default-host.sh # elf-i686
 HOST?=DEFAULT_HOST
 HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
 
+
 CFLAGS?=-O2 -g
 CPPFLAGS?=
 LDFLAGS?=

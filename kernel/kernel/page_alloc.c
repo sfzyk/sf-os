@@ -4,7 +4,7 @@
 #include <i386/smp.h>
 #include <i386/config.h>
 #include <i386/page_table.h>
-static DEFINE_PER_CPU(struct page_state, page_state ) = { 0}; 
+static DEFINE_PER_CPU(struct page_state, page_state ) = { 0 };
 
 
 static inline struct zone* page_zone(struct page* pg){

@@ -46,7 +46,6 @@ SECTIONS
 	{
 		*(.text)
 	}
-	
 	 
 	.rodata BLOCK(4K) : AT(((LOADADDR(.text)+SIZEOF(.text) + 0xfff) & 0xcffff000)) ALIGN(4K)
 	{

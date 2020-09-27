@@ -45,7 +45,7 @@ void init_page_table(pgd_t *pgd_base,pte_t* pte_base){
     for(;pgd_start_index < PTRS_PER_PGD;pgd++,pgd_start_index++){
         unsigned int address = pfn* PAGE_SIZE + PAGE_OFFSET ;
 
-        for(int pte_ofs=0;pte_ofs<PTRS_PER_PTE;pte++, pte_ofs++,pfn++ ){
+        for(int pte_ofs = 0;pte_ofs < PTRS_PER_PTE;pte++, pte_ofs++,pfn++ ){
 
             if(is_kernel_text(address)){
                 set_pte(pte, pfn_pte(pfn, _PAGE_KERNEL_EXEC));
@@ -55,7 +55,7 @@ void init_page_table(pgd_t *pgd_base,pte_t* pte_base){
 
         }
         
-        pte_t * page_table_tmp  =  (((unsigned long )pte_base&(PAGE_MASK))|0x27) - PAGE_OFFSET; /*  () matters!  */
+        pte_t * page_table_tmp  =  (((unsigned long )pte_base&(PAGE_MASK))|_PAGE_RW|_PAGE_PRESENT) - PAGE_OFFSET; /*  () matters!  */
         set_pgd(pgd, _pgd(page_table_tmp));// set swappage dir
         pte_base = pte;
     }
