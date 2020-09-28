@@ -36,19 +36,32 @@ static void * kmem_getpages(struct kmem_cache* cachep, int flags){
     
     return (void *) pg;
 }
+
 /*
 * get a new slab for cahep :
 * int: cache_order ,int flags ? 
-* 
 */
 static inline struct page* new_slab(struct kmem_cache *cachep, int flags){  
-    void * pg = kmem_cache_alloc(cachep,flags);
+    unsigned int * pg = kmem_cache_alloc(cachep,flags);
     unsigned int page_nums = 1 << cachep->cache_order;
 
+    unsigned int pointer_size = sizeof(unsigned int *);
+    unsigned int slab_byte_size = page_nums << PAGE_SHIFT;
+    unsigned int slab_limit = pg + slab_byte_size;
+    unsigned int  * p = pg;
     /*
-    todo init slab struct;
+    *
+    * 
+    *  init free list
+    * 
     */
-    
+    while(p + (pointer_size + cachep->size)*2 < slab_limit){
+        *p = p+pointer_size+cachep->size;
+        p = *p;
+    }
+
+    cachep->cpu_slab->freelist = pg; /* ?????????? confusing i hate void ** */
+
     return (struct page*)pg;
 }
 
