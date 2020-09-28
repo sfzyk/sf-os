@@ -146,6 +146,12 @@ struct page_state {
 #define ClearPagePrivate(page)	clear_bit(PG_private, &(page)->flags)
 #define PagePrivate(page)	test_bit(PG_private, &(page)->flags)
 
+
+#define SetPageSlab(page)	set_bit(PG_slab,&(page)->flags)
+#define ClearPageSlab(page) clear_bit(PG_slab, &(page)->flags)
+#define PageSlab(page)	test_bit(PG_slab,&(page)->flags)
+
+
 /* no difference between SetPagePrivate and __SetPagePrivete by sf*/
 #define __SetPagePrivate(page)  set_bit(PG_private, &(page)->flags)
 #define __ClearPagePrivate(page) __clear_bit(PG_private, &(page)->flags)

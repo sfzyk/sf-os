@@ -2,29 +2,54 @@
 #include "kernel/slub.h"
 #include "kernel/log2.h"
 #include "kernel/list.h"
+#include "i386/mm.h"
 #include "i386/page.h"
-
+#include "i386/page_alloc.h"
+#include "i386/page_flag.h"
 
 /*
 *
 *   init cache cache 
 *
 */
+extern struct pglist_data global_mem_node;
 
 struct kmem_cache kmem_cache_cpu_cache = {(0)};
 struct kmem_cache kmem_cache_cache ={(0)};
 struct kmem_cache kmem_cache_node_cache = {(0)};
 
+
 static void * kmem_getpages(struct kmem_cache* cachep, int flags){
     /*
-    * to do (now)
+    *
+    * to do with staff flags
+    *
     */
+    int cache_o = cachep->cache_order;
+    int slab_size = 1 << cache_o ;
+    struct page * pg = __alloc_pages(0, cache_o, global_mem_node.node_zonelists);
 
+    if(pg)
+        for(int i =0 ;i<slab_size;i++){
+            SetPageSlab(*(pg+i));
+        }
+    
+    return (void *) pg;
 }
-
+/*
+* get a new slab for cahep :
+* int: cache_order ,int flags ? 
+* 
+*/
 static inline struct page* new_slab(struct kmem_cache *cachep, int flags){  
+    void * pg = kmem_cache_alloc(cachep,flags);
+    unsigned int page_nums = 1 << cachep->cache_order;
 
-
+    /*
+    todo init slab struct;
+    */
+    
+    return (struct page*)pg;
 }
 
 static inline void init_cpu_slub(struct kmem_cache * kmem,int flags){
@@ -68,7 +93,7 @@ static inline void init_kmem_cache(void){
 * i just want slub alloctor 
 */
 
-struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,unsigned long flags, void (*ctor)(void *)){
+struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,unsigned long flags, unsigned int cache_order ,void (*ctor)(void *)){
     if(!name){
         return NULL;
     }
@@ -92,6 +117,9 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,
     kmem_cache_desc->size  = size;
     kmem_cache_desc->object_size = tmp_size;
     kmem_cache_desc->offset = 0;
+
+    kmem_cache_desc->cache_order = cache_order;
+
     /*
     *
     *  limit size init 

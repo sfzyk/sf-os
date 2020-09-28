@@ -183,8 +183,10 @@ void free_page(struct page * pg){
  *              
  * 
  * 
-/* heart of buddy alloctor */ 
+/* heart of buddy system alloctor */ 
 /* todo: rebalance and more scan */
+/* todo: alloc normal zone first */
+
 struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zonelist *zonelist){
     struct page * pg;
     struct zone** zones;

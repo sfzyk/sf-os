@@ -23,6 +23,7 @@ struct kmem_cache {
 
     unsigned long  allocflags;
 
+    int cache_order;
     int refcount;
     void (*ctor)(void *); 
     int inuse ;
@@ -57,6 +58,7 @@ struct kmem_cache *kmem_cache_create(const char *name,
         size_t size,
         size_t align,
         unsigned long flags,
+        unsigned int cache_order,
         void (*ctor)(void *));
 void kmem_cache_destroy(struct kmem_cache *);
 void *kmem_cache_alloc(struct kmem_cache *cachep, int flags);
