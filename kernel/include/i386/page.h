@@ -30,4 +30,21 @@
 #define VMALLOC_REVERSE (128 << 20)
 #define MAX_LOW_MEM (-PAGE_OFFSET - VMALLOC_REVERSE)
 
+static inline void *lowmem_page_address(struct page *page)
+{
+	return __va(page_to_pfn(page) << PAGE_SHIFT);
+}
+
+void *page_address(struct page *page)
+{
+	unsigned long flags;
+	void *ret;
+	struct page_address_slot *pas;
+
+	if (!PageHighMem(page))
+		return lowmem_page_address(page);
+ 
+}
+
+
 #endif 

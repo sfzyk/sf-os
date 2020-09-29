@@ -157,7 +157,11 @@ struct page_state {
 #define __ClearPagePrivate(page) __clear_bit(PG_private,(&(page)))->flags)
 
 
-
+/*
+*
+* we need define which page in highmem 
+*
+*/
 #ifdef CONFIG_HIGHMEM
 #define PageHighMem(page)	test_bit(PG_highmem, &(page)->flags)
 #else

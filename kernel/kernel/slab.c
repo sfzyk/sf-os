@@ -42,28 +42,32 @@ static void * kmem_getpages(struct kmem_cache* cachep, int flags){
 * int: cache_order ,int flags ? 
 */
 static inline struct page* new_slab(struct kmem_cache *cachep, int flags){  
-    unsigned int * pg = kmem_cache_alloc(cachep,flags);
-    unsigned int page_nums = 1 << cachep->cache_order;
+    struct page  * page = kmem_cache_alloc(cachep,flags);
+    unsigned int *pg = page_address(page);
 
-    unsigned int pointer_size = sizeof(unsigned int *);
+    unsigned int page_nums = 1 << cachep->cache_order;
+    unsigned int pointer_size = sizeof(void *);
     unsigned int slab_byte_size = page_nums << PAGE_SHIFT;
     unsigned int slab_limit = pg + slab_byte_size;
-    unsigned int  * p = pg;
+    unsigned int  * p = pg + cachep->offset;
     /*
     *
     * 
     *  init free list
     * 
     */
-    while(p + (pointer_size + cachep->size)*2 < slab_limit){
-        *p = p+pointer_size+cachep->size;
+    while(p + (pointer_size + cachep->size)*2 - cachep->offset< slab_limit){
+        *p = p + cachep->object_size;
         p = *p;
     }
 
-    cachep->cpu_slab->freelist = pg; /* ?????????? confusing i hate void ** */
+    *p = 0; /* the end of list */
+
+    cachep->cpu_slab->freelist = pg + cachep->offset; /*  understand void ** */
 
     return (struct page*)pg;
 }
+
 
 static inline void init_cpu_slub(struct kmem_cache * kmem,int flags){
     /*
@@ -104,8 +108,9 @@ static inline void init_kmem_cache(void){
 /*
 * must be called after init_kmem_cache was called 
 * i just want slub alloctor 
+*
+* for example , page align  would be 4096 (not 12)!
 */
-
 struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,unsigned long flags, unsigned int cache_order ,void (*ctor)(void *)){
     if(!name){
         return NULL;
@@ -122,14 +127,21 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,
     kmem_cache_desc->ctor = ctor;
     /*
     *
-    *   obj size staff 
+    *   obj size staff: see slab.h please 
     * 
     */ 
-    size_t align_mask = (1<<align) -1 ;
-    size_t tmp_size = (size + align_mask )&(~align_mask);
+    size_t pointer_size = sizeof(void *); /* assert pointer_size must be 1<<n */
+    size_t pointer_align_mask = pointer_size - 1;
+    size_t tmp_size = (size + pointer_align_mask )&(~pointer_align_mask);
+
+    size_t align_mask = align - 1;
+    size_t obj_size = (tmp_size + pointer_size + align_mask) & (~align_mask);
+
     kmem_cache_desc->size  = size;
-    kmem_cache_desc->object_size = tmp_size;
-    kmem_cache_desc->offset = 0;
+    kmem_cache_desc->object_size = obj_size;
+    kmem_cache_desc->pointer_size = tmp_size;
+
+    kmem_cache_desc->offset = tmp_size;
 
     kmem_cache_desc->cache_order = cache_order;
 
@@ -151,6 +163,8 @@ void *kmem_cache_alloc(struct kmem_cache *cachep, int flags){
     /* todo : nuame */
     struct kmem_cache_node *n = &cachep->node[0]; 
     if(c->page){ //
+        void * address  = page_address(c->page);
+        
 
     }else{ 
         if(c->partial){
@@ -159,12 +173,16 @@ void *kmem_cache_alloc(struct kmem_cache *cachep, int flags){
             goto seeknode;
         }
     }
+
 seeknode: 
     if(list_emtry(n->partial)){ 
         /* if no any slab in n->partial */
         struct page* pg = new_slab(cachep, flags);
         cachep->cpu_slab->page = pg;
+        // cachep->cpu_slab->freelist is already been set;
+
     }else{
+        
 
     }
  

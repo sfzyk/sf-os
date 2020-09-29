@@ -11,9 +11,16 @@ struct kmem_cache {
     struct kmem_cache_cpu *cpu_slab;
     unsigned long flags ;
     unsigned long min_partial;
-
-    int size;
-    int object_size;
+    /*
+    * |--------------------++|---------------|++++++++++++++++++++++++|
+    * ----------obj---------size--pointer---(ps)-------------------objsize
+    * + : unused 
+    * - : used
+    * Note : obj size >= pointer size >= actully_size 
+    */
+    int pointer_size;   // pointer size
+    int size;           // actully size
+    int object_size;    // obj size
 
     int offset;
     int cpu_partial;

@@ -113,10 +113,17 @@ struct page{
     unsigned long index;
 
     struct list_head lru;// struct list_head when page is free 
+	
+	/*
+	*
+	* to check whether to add new field 
+	*
+	*/
 };
 
 void mm_page_init(multiboot_info_t* );
 void node_alloc_mem_map(struct pglist_data*,unsigned int *);
+
 
 
 #endif 
