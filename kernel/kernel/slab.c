@@ -31,9 +31,14 @@ static void * kmem_getpages(struct kmem_cache* cachep, int flags){
 
     if(pg)
         for(int i =0 ;i<slab_size;i++){
-            SetPageSlab(*(pg+i));
-        }
-    
+            SetPageSlab((pg+i));
+            if(i!=0){
+                (pg+i)->next = pg; /* for convience */
+                (pg+i)->buddy = 1;
+            }
+        } 
+
+    pg->buddy = 0;
     return (void *) pg;
 }
 
@@ -52,16 +57,22 @@ static inline struct page* new_slab(struct kmem_cache *cachep, int flags){
     unsigned int  * p = pg + cachep->offset;
     /*
     *
-    * 
     *  init free list
     * 
     */
+
+    unsigned int obj_num = 0 ;
+    /* could be calculated , but i just dont do that */
+
     while(p + (pointer_size + cachep->size)*2 - cachep->offset< slab_limit){
         *p = p + cachep->object_size;
         p = *p;
+        obj_num ++ ;
     }
 
     *p = 0; /* the end of list */
+    obj_num ++ ;
+    page->inuse = page->objects = obj_num;
 
     cachep->cpu_slab->freelist = pg + cachep->offset; /*  understand void ** */
 
@@ -80,6 +91,7 @@ static inline void init_cpu_slub(struct kmem_cache * kmem,int flags){
 
     kmem->cpu_slab->page = NULL;
     kmem->cpu_slab->partial = NULL;
+
     /*
     * freelist is type::void**
     */
@@ -105,6 +117,7 @@ static inline void init_kmem_cache(void){
 
 
 }
+
 /*
 * must be called after init_kmem_cache was called 
 * i just want slub alloctor 
@@ -127,7 +140,7 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,
     kmem_cache_desc->ctor = ctor;
     /*
     *
-    *   obj size staff: see slab.h please 
+    *   obj size staff: see slab.h for more information 
     * 
     */ 
     size_t pointer_size = sizeof(void *); /* assert pointer_size must be 1<<n */
@@ -157,39 +170,68 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,
     init_pernode_slab(kmem_cache_desc, flags);
     return kmem_cache_desc;
 }
-
+/*
+using lru  double link in  node slub 
+using next single link in  cpu  slub 
+*/
 void *kmem_cache_alloc(struct kmem_cache *cachep, int flags){
-    struct kmem_cache_cpu *c = cachep->cpu_slab;
-    /* todo : nuame */
+    /* todo : nume */
+    void * return_obj_p = NULL;
+
     struct kmem_cache_node *n = &cachep->node[0]; 
-    if(c->page){ //
+    struct kmem_cache_cpu *c = cachep->cpu_slab;
+
+restart : 
+    if(c->page){ /* now we get it from the very first level page pool for slab */
         void * address  = page_address(c->page);
-        
+        void ** free_list_head = cachep->cpu_slab->freelist;
+
+        return_obj_p = free_list_head - cachep->offset;
+        cachep->cpu_slab->freelist = *free_list_head;
+        if(*cachep->cpu_slab->freelist == NULL){ /*a slab ends its life, then become ghost :) */
+            cachep->cpu_slab->page = NULL;
+            cachep->cpu_slab->freelist = NULL;
+            c->page->frozen = 1; /* died */
+        }
+        /* c->page->inuse wont update */
 
     }else{ 
         if(c->partial){
+        /* now we get to cpu slab move a slab to c->page */
+            c->page = c->partial;
+            c->freelist = c->page->free_list; /* do not update page freelist since it's c->page */
+            c->partial = c->partial->next; 
+            goto restart;
 
         }else{
             goto seeknode;
         }
     }
 
+    /* every thing would be ok */
+    return return_obj_p;
 seeknode: 
     if(list_emtry(n->partial)){ 
         /* if no any slab in n->partial */
         struct page* pg = new_slab(cachep, flags);
         cachep->cpu_slab->page = pg;
         // cachep->cpu_slab->freelist is already been set;
+        goto restart;
 
-    }else{
-        
-
+    }else{ /* get slab from node */
+        struct list_head *p = n->partial.next;
+        list_del(p);
+        struct page *pg = (struct page*)list_entry(p,struct page,free_list);
+        cachep->cpu_slab->page = pg;
+        cachep->cpu_slab->freelist = pg->free_list;
+        cachep->cpu_slab->page->inuse = pg->objects;
+        goto restart;
     }
- 
-
+}
+void kmem_cache_free(struct kmem_cache *cachep, void *objp){
+    struct page* pg = kaddr_to_page(objp);
+    
 
 
 }
-
-void kmem_cache_destroy(struct kmem_cache *);
-void kmem_cache_free(struct kmem_cache *cachep, void *objp);
+void kmem_cache_destroy(struct kmem_cache *cachep);

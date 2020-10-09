@@ -39,7 +39,7 @@ struct kmem_cache {
     const char * name;
     struct list_head head;
     /*
-    todo : sysfs and cgroup 
+    * todo : sysfs and cgroup 
     */
    struct kmem_cache_node *node[MAX_NUMNODES];
 };

@@ -112,12 +112,22 @@ struct page{
 
     unsigned long index;
 
-    struct list_head lru;// struct list_head when page is free 
-	
+	struct {			/* SLUB */
+		unsigned inuse:15;
+		unsigned objects:15;
+		unsigned buddy:1;
+		unsigned frozen:1;
+	};
+	void ** free_list; /* SLUB */
+	union{
+    	struct list_head lru;
+		struct page* next; 
+		/* SLUB  use in cpu slab , or in buddy slub */
+	};
 	/*
-	*
-	* to check whether to add new field 
-	*
+		page　free : struct list_head when page is free 
+		page in slub : the next pointer
+
 	*/
 };
 

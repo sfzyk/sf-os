@@ -21,8 +21,9 @@
     #define __va(x)			((void *)((unsigned long)(x)+PAGE_OFFSET))
     #define pfn_to_kaddr(pfn)      __va((pfn) << PAGE_SHIFT)
     #define kaddr_to_pfn(kaddr)    ((__pa(kaddr)) >> PAGE_SHIFT)
-       unsigned long virt_to_phys(void * address);
-       void *lowmem_page_address(struct page *page);
+    #define kaddr_to_page(kaddr)    pfn_to_page(kaddr_to_pfn(kaddr))
+    unsigned long virt_to_phys(void * address);
+    void *lowmem_page_address(struct page *page);
     void *page_address(struct page *page);
 
 
