@@ -10,6 +10,7 @@
 
 
 #ifndef __ASM__
+    #include <i386/page_flag.h>
     #include <i386/mm.h>    
     extern struct page* mem_map;
     #define pfn_to_page(pfn)	(mem_map + (pfn))
@@ -20,27 +21,9 @@
     #define __va(x)			((void *)((unsigned long)(x)+PAGE_OFFSET))
     #define pfn_to_kaddr(pfn)      __va((pfn) << PAGE_SHIFT)
     #define kaddr_to_pfn(kaddr)    ((__pa(kaddr)) >> PAGE_SHIFT)
-
-    static inline unsigned long virt_to_phys(void * address){
-        return __pa(address);
-    }
-
-
-static inline void *lowmem_page_address(struct page *page)
-{
-	return __va(page_to_pfn(page) << PAGE_SHIFT);
-}
-
-void *page_address(struct page *page)
-{
-	unsigned long flags;
-	void *ret;
-	struct page_address_slot *pas;
-
-	if (!PageHighMem(page))
-		return lowmem_page_address(page);
- 
-}
+       unsigned long virt_to_phys(void * address);
+       void *lowmem_page_address(struct page *page);
+    void *page_address(struct page *page);
 
 
 #endif 

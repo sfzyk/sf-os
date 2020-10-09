@@ -3,8 +3,8 @@ HOST?=DEFAULT_HOST
 HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
 
 
-CFLAGS?=-O2 -g
-CPPFLAGS?=
+CFLAGS?=-O2 -g -w
+CPPFLAGS?=-w
 LDFLAGS?=
 LIBS?=
 
