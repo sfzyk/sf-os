@@ -25,10 +25,6 @@
         return __pa(address);
     }
 
-#endif 
-
-#define VMALLOC_REVERSE (128 << 20)
-#define MAX_LOW_MEM (-PAGE_OFFSET - VMALLOC_REVERSE)
 
 static inline void *lowmem_page_address(struct page *page)
 {
@@ -45,6 +41,12 @@ void *page_address(struct page *page)
 		return lowmem_page_address(page);
  
 }
+
+
+#endif 
+
+#define VMALLOC_REVERSE (128 << 20)
+#define MAX_LOW_MEM (-PAGE_OFFSET - VMALLOC_REVERSE)
 
 
 #endif 

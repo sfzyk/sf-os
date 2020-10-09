@@ -140,7 +140,7 @@ void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
     for(int i=0;i<max_pfn;i++){ 
 
         if(i < reverse_pfn){
-            SetPageReserved(&mem_map[i] );
+            SetPageReserved(mem_map[i]);
             atomic_set(&mem_map[i]._count, -1);
         }    
 
