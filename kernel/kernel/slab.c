@@ -2,6 +2,7 @@
 #include "kernel/slub.h"
 #include "kernel/log2.h"
 #include "kernel/list.h"
+#include "kernel/printk.h"
 #include "i386/mm.h"
 #include "i386/page.h"
 #include "i386/page_alloc.h"
@@ -185,7 +186,6 @@ restart :
     if(c->page){ /* now we get it from the very first level page pool for slab */
         void * address  = page_address(c->page);
         void ** free_list_head = cachep->cpu_slab->freelist;
-
         return_obj_p = free_list_head - cachep->offset;
         cachep->cpu_slab->freelist = *free_list_head;
         if(*cachep->cpu_slab->freelist == NULL){ /*a slab ends its life, then become ghost :) */
@@ -228,10 +228,65 @@ seeknode:
         goto restart;
     }
 }
+
 void kmem_cache_free(struct kmem_cache *cachep, void *objp){
     struct page* pg = kaddr_to_page(objp);
+    if(pg->buddy==1){
+        pg = pg->next; /* we go to the head slab page */
+    }
+
+    if(cachep->cpu_slab->page == pg){
+        /* just free it ,i hope it work, pointer sucks*/
+        void * head = *cachep->cpu_slab->freelist;
+        if(head == NULL){ 
+            /* already full */
+            printk("full page still in current front???\n");
+            return;
+        }
     
+        while(*(unsigned int *)head){
 
+            if(*(unsigned int *)head > objp) /*find it*/
+                break;
+            
+            head = (void *)*(unsigned int *)head; 
+            /* a little complex 
+            * free pointer is *****void so be *void 
+            */
+        }
 
+        void * next = (void *)*(unsigned int *)head;
+        *(unsigned int *)head = objp + cachep->offset;
+
+        head = (void *)*(unsigned int *)head;
+        if(head) 
+            *(unsigned int *)head = next;
+        return;
+    }
+    /* free it, if it alive again ,a lots to do */
+    void * head = pg->free_list;
+    if(head == NULL){ 
+        /* already full , it alive again*/
+        
+    }else{
+        while(*(unsigned int *)head){
+
+            if(*(unsigned int *)head > objp) /*find it*/
+                break;
+            
+            head = (void *)*(unsigned int *)head; 
+            /* a little complex 
+            * free pointer is *****void so be *void 
+            */
+        }
+
+        void * next = (void *)*(unsigned int *)head;
+        *(unsigned int *)head = objp + cachep->offset;
+
+        head = (void *)*(unsigned int *)head;
+        if(head) 
+            *(unsigned int *)head = next;
+        return;
+    }
 }
 void kmem_cache_destroy(struct kmem_cache *cachep);
