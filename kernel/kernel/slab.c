@@ -43,12 +43,29 @@ static void * kmem_getpages(struct kmem_cache* cachep, int flags){
     return (void *) pg;
 }
 
+static void * kmem_freepages(struct kmem_cache* cachep, struct page * pg ,int flags){
+    /*
+    *
+    * to do with staff flags
+    *
+    */
+    int cache_o = cachep->cache_order;
+    int slab_size = 1 << cache_o ;
+
+    for(int i =0 ;i<slab_size;i++){
+        ClearPageSlab((pg+i));
+    } 
+    __free_pages(pg, cachep->cache_order); 
+    return ;
+}
+
 /*
 * get a new slab for cahep :
 * int: cache_order ,int flags ? 
 */
 static inline struct page* new_slab(struct kmem_cache *cachep, int flags){  
-    struct page  * page = kmem_cache_alloc(cachep,flags);
+    struct page  * page =  (struct page *) kmem_getpages(cachep,cachep->cache_order);
+
     unsigned int *pg = page_address(page);
 
     unsigned int page_nums = 1 << cachep->cache_order;
@@ -74,8 +91,8 @@ static inline struct page* new_slab(struct kmem_cache *cachep, int flags){
     *p = 0; /* the end of list */
     obj_num ++ ;
     page->inuse = page->objects = obj_num;
-
-    cachep->cpu_slab->freelist = pg + cachep->offset; /*  understand void ** */
+    page->frozen = 1; /* when i get a slab it must be currently used */
+    cachep->cpu_slab->freelist = pg + cachep->offset; /* understand void ** */
 
     return (struct page*)pg;
 }
@@ -167,7 +184,7 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,
     set_cpu_partial(kmem_cache_desc);
     set_min_partial(kmem_cache_desc, ilog2(size)/2 );
 
-    init_cpu_slab(kmem_cache_desc, flags);
+    init_cpu_slub(kmem_cache_desc, flags);
     init_pernode_slab(kmem_cache_desc, flags);
     return kmem_cache_desc;
 }
@@ -191,7 +208,8 @@ restart :
         if(*cachep->cpu_slab->freelist == NULL){ /*a slab ends its life, then become ghost :) */
             cachep->cpu_slab->page = NULL;
             cachep->cpu_slab->freelist = NULL;
-            c->page->frozen = 1; /* died */
+            c->page->pobjects = 0; /* all objects is in use */
+            c->page->frozen = 0; /* died */
         }
         /* c->page->inuse wont update */
 
@@ -211,7 +229,7 @@ restart :
     /* every thing would be ok */
     return return_obj_p;
 seeknode: 
-    if(list_emtry(n->partial)){ 
+    if(list_empty(&n->partial)){ 
         /* if no any slab in n->partial */
         struct page* pg = new_slab(cachep, flags);
         cachep->cpu_slab->page = pg;
@@ -248,7 +266,7 @@ void kmem_cache_free(struct kmem_cache *cachep, void *objp){
 
             if(*(unsigned int *)head > objp) /*find it*/
                 break;
-            
+
             head = (void *)*(unsigned int *)head; 
             /* a little complex 
             * free pointer is *****void so be *void 
@@ -257,36 +275,97 @@ void kmem_cache_free(struct kmem_cache *cachep, void *objp){
 
         void * next = (void *)*(unsigned int *)head;
         *(unsigned int *)head = objp + cachep->offset;
-
         head = (void *)*(unsigned int *)head;
         if(head) 
             *(unsigned int *)head = next;
         return;
     }
-    /* free it, if it alive again ,a lots to do */
-    void * head = pg->free_list;
-    if(head == NULL){ 
-        /* already full , it alive again*/
-        
-    }else{
-        while(*(unsigned int *)head){
 
+    /* free it, if it alive again ,a lots to do 
+    *
+    *  free_list in pg struct 
+    * */
+    void * head = pg->free_list;
+
+    if(head == NULL){ 
+        /* already full , it alive again, we put it in cpu slab */
+        pg->free_list = objp + cachep->offset;
+        *(unsigned int *)(objp+ cachep->offset) = NULL; /* init for this slab free_list */
+        pg->inuse -= 1; /* inuse == objects before */
+
+        unsigned total_obj_nums  = 0;
+        void * tmp_p;
+        if(cachep->cpu_slab->partial){  /* already a pobjects avaliable */
+            tmp_p  = cachep->cpu_slab->partial;
+            total_obj_nums = cachep->cpu_slab->partial->pobjects;
+            total_obj_nums = pg->pobjects = pg->pobjects + total_obj_nums + 1;  
+
+            if(total_obj_nums < cachep->cpu_partial){ /* still cpu slab have enough space for that */
+                cachep->cpu_slab->partial = pg;
+                pg->next = tmp_p;
+            }else{ /* must move some slab to node slab */
+                list_add(&cachep->node[0]->partial, &pg->lru);
+                cachep->node[0]->nr_partial ++ ;
+                /* other staff done at free empty time  */
+            }
+
+        }else{
+            cachep->cpu_slab->partial = pg;
+            pg->pobjects += 1;
+            pg->next = NULL;
+        }
+        return;
+
+    }else{
+        /* slab already in cpu slab or node slab  */
+        while(*(unsigned int *)head){
             if(*(unsigned int *)head > objp) /*find it*/
                 break;
-            
             head = (void *)*(unsigned int *)head; 
             /* a little complex 
             * free pointer is *****void so be *void 
             */
         }
-
         void * next = (void *)*(unsigned int *)head;
         *(unsigned int *)head = objp + cachep->offset;
-
         head = (void *)*(unsigned int *)head;
         if(head) 
             *(unsigned int *)head = next;
+
+        pg->inuse -=1 ;
+
+        if(pg->inuse == 0){ /* already empty slab , if there are too many slab we free it */
+            if(cachep->min_partial < cachep->node[0]->nr_partial){
+
+                /* free whole slab , when there are many in node slab */
+                if(pg->frozen == 1){ /* remove cpu slab */
+                    unsigned int all_nums_slab = cachep->cpu_slab->page->pobjects + 1 - cachep->cpu_slab->page->objects;
+                    struct page** tmp_page = &cachep->cpu_slab->partial;
+
+                    while( (*tmp_page)!= pg){
+                        tmp_page = &(*tmp_page)->next;
+                    }
+                    *tmp_page = pg->next ;
+                    cachep->cpu_slab->page->pobjects = all_nums_slab;
+
+                }else{
+                    list_del(&pg->lru);
+                    cachep->node[0]->nr_partial--;
+                }
+                kmem_freepages(cachep,pg,cachep->flags); 
+                return;
+            }
+        }
+        /* not full or not empty , dont do anything */
+        if(pg->frozen == 1){/* in cpu slab */
+            cachep->cpu_slab->partial->pobjects ++ ;
+        }else{/*in node slab */
+            /* wont do anything ?*/
+        }
         return;
     }
 }
-void kmem_cache_destroy(struct kmem_cache *cachep);
+
+void kmem_cache_destroy(struct kmem_cache *cachep){
+    /*to do */
+}

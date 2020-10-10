@@ -5,7 +5,7 @@
 #define MAX_PARTIAL 10
 #define MIN_PARTIAL 5
 
-static void set_min_partial(struct kmem_cache *s, unsigned min_obj){    
+ void set_min_partial(struct kmem_cache *s, unsigned min_obj){    
 	if (min_obj < MIN_PARTIAL)
 		min_obj = MIN_PARTIAL;
 	else if (min_obj > MAX_PARTIAL)
@@ -13,7 +13,7 @@ static void set_min_partial(struct kmem_cache *s, unsigned min_obj){
 	s->min_partial = min_obj;
 }
 
-static void set_cpu_partial(struct kmem_cache *s)
+ void set_cpu_partial(struct kmem_cache *s)
 {
  
 	/*

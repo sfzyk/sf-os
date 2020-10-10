@@ -2,7 +2,7 @@
 #define __SLAB_H__
 #include <kernel/list.h>
 #include <i386/mm.h>
-#include <cdefs.h>
+#include <stddef.h>
 
 /*
     actually i just want slub

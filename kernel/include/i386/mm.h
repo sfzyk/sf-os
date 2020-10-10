@@ -116,7 +116,7 @@ struct page{
 		unsigned inuse:15;
 		unsigned objects:15;
 		unsigned buddy:1;
-		unsigned frozen:1;
+		unsigned frozen:1;  /*frozen means it currently been used */
 	};
 	void ** free_list; /* SLUB */
 	union{
@@ -124,6 +124,9 @@ struct page{
 		struct page* next; 
 		/* SLUB  use in cpu slab , or in buddy slub */
 	};
+
+	unsigned int pobjects;/* all slab in a paritial list */
+
 	/*
 		page　free : struct list_head when page is free 
 		page in slub : the next pointer

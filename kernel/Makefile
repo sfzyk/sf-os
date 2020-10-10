@@ -14,7 +14,7 @@ EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
+CFLAGS:=$(CFLAGS) -ffreestanding -w -Wextra  -fno-asynchronous-unwind-tables
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -nostdlib -lk -lgcc # 指定 libk libgcc 内核专用数据结构 libk.a libgcc.a
@@ -33,7 +33,8 @@ $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
 kernel/segment.o kernel/interrupt.o \
 kernel/printk.o kernel/setup.o \
-kernel/mm_init.o kernel/page_alloc.o
+kernel/mm_init.o kernel/page_alloc.o\
+kernel/slab.o kernel/slub.o
 
 OBJS=\
 $(ARCHDIR)/crti.o \
@@ -57,7 +58,7 @@ $(ARCHDIR)/crtn.o \
 all: sf-os.kernel
 
 sf-os.kernel: $(OBJS) $(ARCHDIR)/linker.ld
-	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
+	$(CC)   -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
 	grub-file --is-x86-multiboot sf-os.kernel
 
 $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:

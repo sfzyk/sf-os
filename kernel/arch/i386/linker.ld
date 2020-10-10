@@ -50,6 +50,7 @@ SECTIONS
 	.rodata BLOCK(4K) : AT(((LOADADDR(.text)+SIZEOF(.text) + 0xfff) & 0xcffff000)) ALIGN(4K)
 	{
 		*(.rodata)
+		*(.rodata.str1.*)
 	}
 
 
@@ -59,7 +60,7 @@ SECTIONS
 	}
 
 	
-	.bss BLOCK(4K) : AT( (LOADADDR(.data) + SIZEOF(.data)+ 0xfff)&0xcffff000 ) ALIGN(4K)  
+	.bss BLOCK(4K) : AT( ((LOADADDR(.data) + SIZEOF(.data)+ 0xfff)&0xcffff000 )) ALIGN(4K)  
 	{
 		*(.bss.pagedir)   /* page table must aligned at 256 byte at least : please see i386 manual */
 		*(.bss)

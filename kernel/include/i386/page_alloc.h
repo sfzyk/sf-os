@@ -5,6 +5,6 @@
 #include "i386/mm.h"
 
 struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zonelist *zonelist);
-
+void __free_pages(struct page* pg, unsigned int order);
 
 #endif
