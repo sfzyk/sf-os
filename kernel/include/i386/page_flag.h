@@ -15,6 +15,8 @@
 #define __GFP_DMA	0x01
 #define __GFP_HIGHMEM	0x02
 
+#define GFP_ZONEMASK	0x03
+
 /*
  * Action modifiers - doesn't change the zoning
  *

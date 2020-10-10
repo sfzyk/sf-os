@@ -4,6 +4,7 @@
 #include <i386/mm.h>
 #include <stddef.h>
 
+
 /*
     actually i just want slub
 */
@@ -61,6 +62,7 @@ struct kmem_cache_node{
 * all function provide for other
 * 
 */
+void init_kmem_cache(void);
 struct kmem_cache *kmem_cache_create(const char *name,
         size_t size,
         size_t align,

@@ -21,7 +21,7 @@ dont support numa for now
 #define TYPE_ZONES_SHIFT 2 
 #define NUMNODES_SHIFT 0 
 
-#define GFP_ZONETYPES 3
+#define GFP_ZONETYPES 4
 
 
 

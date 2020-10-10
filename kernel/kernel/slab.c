@@ -13,11 +13,100 @@
 *   init cache cache 
 *
 */
+struct list_head cache_list_head;
+
 extern struct pglist_data global_mem_node;
 
 struct kmem_cache kmem_cache_cpu_cache = {(0)};
+struct kmem_cache_cpu t1 ={(0)};
+struct kmem_cache_node n1 = {(0)};
+
 struct kmem_cache kmem_cache_cache ={(0)};
+struct kmem_cache_cpu t2 ={(0)};
+struct kmem_cache_node n2={(0)};
+
 struct kmem_cache kmem_cache_node_cache = {(0)};
+struct kmem_cache_cpu t3={(0)};
+struct kmem_cache_node n3={(0)};
+
+
+/*
+* init for these kernel static data 
+* stupid code style , fix me. 
+*/
+void init_kmem_cache(void){
+    init_list(&cache_list_head);
+    list_add(&cache_list_head, &kmem_cache_cache.head);
+    list_add(&cache_list_head, &kmem_cache_node_cache.head);
+    list_add(&cache_list_head, &kmem_cache_cpu_cache.head);
+
+    {
+        kmem_cache_cache.cache_order = 1;
+        kmem_cache_cache.inuse = 0;
+        kmem_cache_cache.name = "kernel used kmem cache(original cache)";
+        size_t size = sizeof(struct kmem_cache);
+        size_t align = 128; /* nonsense */
+        size_t pointer_size = sizeof(void *); /* assert pointer_size must be 1<<n */
+        size_t pointer_align_mask = pointer_size - 1;
+        size_t tmp_size = (size + pointer_align_mask )&(~pointer_align_mask);
+        size_t align_mask = align - 1;
+        size_t obj_size = (tmp_size + pointer_size + align_mask) & (~align_mask);
+        kmem_cache_cache.size  = size;
+        kmem_cache_cache.object_size = obj_size;
+        kmem_cache_cache.pointer_size = tmp_size;
+        kmem_cache_cache.offset = tmp_size;
+        set_cpu_partial(&kmem_cache_cache);
+        set_min_partial(&kmem_cache_cache, ilog2(size)/2 );
+        kmem_cache_cache.cpu_slab = &t1;
+        kmem_cache_cache.node[0]=&n1;
+        init_list(&n1.partial);
+    }
+
+    {
+        kmem_cache_cpu_cache.cache_order = 1;
+        kmem_cache_cpu_cache.inuse = 0;
+        kmem_cache_cpu_cache.name = "kernel used kmem cpu cache(original cache)";
+        size_t size = sizeof(struct kmem_cache_cpu);
+        size_t align = 128; /* nonsense */
+        size_t pointer_size = sizeof(void *); /* assert pointer_size must be 1<<n */
+        size_t pointer_align_mask = pointer_size - 1;
+        size_t tmp_size = (size + pointer_align_mask )&(~pointer_align_mask);
+        size_t align_mask = align - 1;
+        size_t obj_size = (tmp_size + pointer_size + align_mask) & (~align_mask);
+        kmem_cache_cpu_cache.size  = size;
+        kmem_cache_cpu_cache.object_size = obj_size;
+        kmem_cache_cpu_cache.pointer_size = tmp_size;
+        kmem_cache_cpu_cache.offset = tmp_size;
+        set_cpu_partial(&kmem_cache_cpu_cache);
+        set_min_partial(&kmem_cache_cpu_cache, ilog2(size)/2 );
+        kmem_cache_cpu_cache.cpu_slab = &t2;
+        kmem_cache_cpu_cache.node[0]=&n2;
+        init_list(&n2.partial);
+    }
+
+    {
+        kmem_cache_node_cache.cache_order = 1;
+        kmem_cache_node_cache.inuse = 0;
+        kmem_cache_node_cache.name = "kernel used kmem node cache(original cache)";
+        size_t size = sizeof(struct kmem_cache_node);
+        size_t align = 128; /* nonsense */
+        size_t pointer_size = sizeof(void *); /* assert pointer_size must be 1<<n */
+        size_t pointer_align_mask = pointer_size - 1;
+        size_t tmp_size = (size + pointer_align_mask )&(~pointer_align_mask);
+        size_t align_mask = align - 1;
+        size_t obj_size = (tmp_size + pointer_size + align_mask) & (~align_mask);
+        kmem_cache_node_cache.size  = size;
+        kmem_cache_node_cache.object_size = obj_size;
+        kmem_cache_node_cache.pointer_size = tmp_size;
+        kmem_cache_node_cache.offset = tmp_size;
+        set_cpu_partial(&kmem_cache_node_cache);
+        set_min_partial(&kmem_cache_node_cache, ilog2(size)/2 );
+        kmem_cache_node_cache.cpu_slab = &t3;
+        kmem_cache_node_cache.node[0]=&n3;
+        init_list(&n3.partial);
+    }
+
+}
 
 
 static void * kmem_getpages(struct kmem_cache* cachep, int flags){
@@ -28,7 +117,7 @@ static void * kmem_getpages(struct kmem_cache* cachep, int flags){
     */
     int cache_o = cachep->cache_order;
     int slab_size = 1 << cache_o ;
-    struct page * pg = __alloc_pages(0, cache_o, global_mem_node.node_zonelists);
+    struct page * pg = __alloc_pages(0, cache_o, &global_mem_node.node_zonelists[0]);
 
     if(pg)
         for(int i =0 ;i<slab_size;i++){
@@ -96,8 +185,7 @@ static inline struct page* new_slab(struct kmem_cache *cachep, int flags){
 
     return (struct page*)pg;
 }
-
-
+ 
 static inline void init_cpu_slub(struct kmem_cache * kmem,int flags){
     /*
     *
@@ -116,6 +204,7 @@ static inline void init_cpu_slub(struct kmem_cache * kmem,int flags){
 }
 
 
+
 static inline void init_pernode_slab(struct kmem_cache *kmem, int flags){
     for(int i=0;i<MAX_NUMNODES;i++){ 
         kmem->node[i] = (struct kmem_cache_node*)kmem_cache_alloc(&kmem_cache_node_cache,flags);
@@ -127,14 +216,7 @@ static inline void init_pernode_slab(struct kmem_cache *kmem, int flags){
     }
 }
 
-/*
-* init for these kernel static data 
-* todo : move data to a proper place 
-*/
-static inline void init_kmem_cache(void){
 
-
-}
 
 /*
 * must be called after init_kmem_cache was called 
@@ -196,7 +278,7 @@ void *kmem_cache_alloc(struct kmem_cache *cachep, int flags){
     /* todo : nume */
     void * return_obj_p = NULL;
 
-    struct kmem_cache_node *n = &cachep->node[0]; 
+    struct kmem_cache_node *n = cachep->node[0]; 
     struct kmem_cache_cpu *c = cachep->cpu_slab;
 
 restart : 

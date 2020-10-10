@@ -72,6 +72,8 @@ void mm_page_init(multiboot_info_t* mdb){
     */
     zone_sizes_init();
 
+    init_build_zonelist(&global_mem_node);
+
     printf("page management have been completed!!\n");
 
     return ;

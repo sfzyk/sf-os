@@ -4,6 +4,7 @@
 #include <i386/smp.h>
 #include <i386/config.h>
 #include <i386/page_table.h>
+#include <stdio.h>
 static DEFINE_PER_CPU(struct page_state, page_state ) = { 0 };
 
 
@@ -188,6 +189,7 @@ void free_page(struct page * pg){
 /* todo: alloc normal zone first */
 
 struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zonelist *zonelist){
+    
     struct page * pg;
     struct zone** zones;
     struct zone * z;
@@ -196,7 +198,7 @@ struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zo
     class_zoneidx = zones[0] - zones[0]->pglist->node_zones; 
 
 
-    for(int i =0;(z=zones[i]!=0);i++ ){
+    for(int i =0;((z=zones[i])!=0);i++ ){
 
         pg = buffered_rmqueue(z,order,gfp_mask); // ? 
 
@@ -205,11 +207,13 @@ struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zo
         }
 
     }
+
     if(!pg){
         goto nopg;
     }
 
     got_pg:
+      
         return pg;
     nopg:
         return -1;

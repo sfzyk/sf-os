@@ -3,7 +3,7 @@ HOST?=DEFAULT_HOST
 HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
 
 
-CFLAGS?=-O2 -g -w
+CFLAGS?=-O0 -g -w
 CPPFLAGS?=-w
 LDFLAGS?=
 LIBS?=
@@ -34,7 +34,7 @@ kernel/kernel.o \
 kernel/segment.o kernel/interrupt.o \
 kernel/printk.o kernel/setup.o \
 kernel/mm_init.o kernel/page_alloc.o\
-kernel/slab.o kernel/slub.o
+kernel/slab.o kernel/slub.o kernel/test.o
 
 OBJS=\
 $(ARCHDIR)/crti.o \

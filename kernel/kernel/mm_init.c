@@ -148,3 +148,26 @@ void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
         free_page(&mem_map[i]);
     }
 }
+
+/*init for zonelist */
+void init_build_zonelist(pg_data_t* mem_node){
+    
+    for(int i =0 ;i<GFP_ZONETYPES;i++){
+        int DMA = 0,HIGH = 0;
+        DMA = __GFP_DMA & i;
+        HIGH = __GFP_HIGH &i;
+        int p = 0;
+        while(DMA|HIGH){
+            if(DMA){
+                mem_node->node_zonelists[i].zones[p] = &mem_node->node_zones[DMA_ZONE];
+                DMA =0 ;
+            }
+            else if(HIGH){
+               mem_node->node_zonelists[i].zones[p] = &mem_node->node_zones[HIGH_ZONE];
+               HIGH =0;
+            }
+            p++;
+        }
+        mem_node->node_zonelists[i].zones[p] = &mem_node->node_zones[NORMAL_ZONE];
+    }
+}
