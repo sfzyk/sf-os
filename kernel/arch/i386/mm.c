@@ -10,7 +10,7 @@ extern pgd_t global_page_dir[1024];
 extern pte_t *page_start;
 extern struct pglist_data global_mem_node;
 struct page* mem_map;
-struct zone* zone_table[1 <<(MAX_NR_ZONES *MAX_NUMNODES)+1]; // ? 
+struct zone* zone_table[(MAX_NR_ZONES *MAX_NUMNODES)+1]; // ? 
 void zone_sizes_init(void);
 void init_page_table(pgd_t *pgd_base,pte_t* pte_base);
 
@@ -21,12 +21,15 @@ void init_page_table(pgd_t *pgd_base,pte_t* pte_base);
 int max_pfn,max_low_pfn,start_pfn;
 
 static inline void find_pfn_layout(multiboot_info_t *mdb){
+    /*
+    * why this not execute ?
+    */
     size_t mem_map_len = mdb->mmap_length ;
     multiboot_memory_map_t * mmap_pointer = mdb->mmap_addr;
-    while(mem_map_len){
+    while(mem_map_len != 0){
         if(mmap_pointer->type == MULTIBOOT_MEMORY_AVAILABLE){
-            if(max_pfn > PFN_DOWN(mmap_pointer->addr + mmap_pointer->size))
-                max_pfn = PFN_DOWN(mmap_pointer->addr+mmap_pointer->size);
+            if(max_pfn < PFN_DOWN(mmap_pointer->addr + mmap_pointer->size))
+                max_pfn = PFN_DOWN(mmap_pointer->addr + mmap_pointer->len);/* fixed size->len */
         }
         mem_map_len -= mmap_pointer->size + 4; 
         mmap_pointer=(multiboot_memory_map_t *)(((char *)mmap_pointer )+ mmap_pointer->size + 4);

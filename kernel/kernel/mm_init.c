@@ -10,8 +10,8 @@ extern int start_pfn,max_pfn,max_low_pfn;
 extern pte_t page_start;
 extern unsigned int __kernel_virtual_address_end;
 extern struct page* mem_map;
-extern struct zone* zone_table;
-struct pglist_data global_mem_node;
+extern struct zone*  __attribute__((used)) zone_table[(MAX_NR_ZONES *MAX_NUMNODES)+1]; 
+struct pglist_data  __attribute__((used)) global_mem_node;
 
 pte_t * page_desc_start;
 free_page(struct page*);
@@ -85,14 +85,6 @@ void zone_sizes_init(void){
     }
 
     /*
-    *
-    */
-    for(unsigned int i = 0;i< MAX_NR_ZONES;i++){
-        zone_table[i] = global_mem_node.node_zones[i];
-    }
-
-
-    /*
     * calulate the page status
     */
     int usedpages = 0; 
@@ -102,13 +94,14 @@ void zone_sizes_init(void){
 
     global_mem_node.node_spanned_pages = global_mem_node.node_present_pages = usedpages ;
 
-
     node_alloc_mem_map(&global_mem_node, &zones_size);
+    /*
+    *
+    */
+
 }
 
-
 /*
-*
 *  init page descriptor 
 */
 void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
@@ -136,16 +129,20 @@ void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
         }
     }
 
+    for(unsigned int i = 0;i< MAX_NR_ZONES;i++){
+        zone_table[i] = &global_mem_node.node_zones[i];
+    }
     
     for(int i=0;i<max_pfn;i++){ 
 
-        if(i < reverse_pfn){
+        mem_map[i].private = 0;
+        if(i < reverse_pfn){ /*reversed  page*/
             SetPageReserved(&mem_map[i]);
+            atomic_set(&mem_map[i]._count, 0); /*i cant free a reversed page */
+        }else{
             atomic_set(&mem_map[i]._count, -1);
-        }    
-        
-        mem_map[i].private = -1;
-        free_page(&mem_map[i]);
+            free_page(&mem_map[i]);
+        }
     }
 }
 
