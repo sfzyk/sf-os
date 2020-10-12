@@ -10,8 +10,9 @@ SECTIONS
 {
 	/* Begin putting sections at 1 MiB, a conventional place for kernels to be
 	   loaded at by the bootloader. */
-	. = 1M;
- 
+	/* left valueable DMA zone */
+	
+	. = 16M;
 	__kernel_physical_address_start = . ;
 
 	.boottext :

@@ -9,6 +9,7 @@
 extern int start_pfn,max_pfn,max_low_pfn;
 extern pte_t page_start;
 extern unsigned int __kernel_virtual_address_end;
+extern unsigned int __kernel_physical_address_start;
 extern struct page* mem_map;
 extern struct zone*  __attribute__((used)) zone_table[(MAX_NR_ZONES *MAX_NUMNODES)+1]; 
 struct pglist_data  __attribute__((used)) global_mem_node;
@@ -22,7 +23,7 @@ free_page(struct page*);
 *
 */
 int is_kernel_text(unsigned int address){
-    return address > PAGE_OFFSET && address < __kernel_virtual_address_end;
+    return address > PAGE_OFFSET + __kernel_physical_address_start && address < __kernel_virtual_address_end;
 }
 
 /*
@@ -107,6 +108,8 @@ void zone_sizes_init(void){
 void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
     mem_map= pgt->node_mem_map = page_desc_start;
     unsigned int page_desc_size = max_pfn * sizeof(struct page) ;
+
+    unsigned int reverse_pfn_start = __kernel_physical_address_start >> PAGE_SHIFT;
     unsigned int reverse_pfn = kaddr_to_pfn((void *)page_desc_start + page_desc_size);
 
     unsigned count = 0;
@@ -136,7 +139,7 @@ void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
     for(int i=0;i<max_pfn;i++){ 
 
         mem_map[i].private = 0;
-        if(i < reverse_pfn){ /*reversed  page*/
+        if(i < reverse_pfn && i > reverse_pfn_start){ /*reversed  page*/
             SetPageReserved(&mem_map[i]);
             atomic_set(&mem_map[i]._count, 0); /*i cant free a reversed page */
         }else{
