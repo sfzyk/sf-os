@@ -143,7 +143,7 @@ void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
             SetPageReserved(&mem_map[i]);
             atomic_set(&mem_map[i]._count, -1);
         }    
-
+        
         mem_map[i].private = -1;
         free_page(&mem_map[i]);
     }

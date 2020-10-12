@@ -6,10 +6,10 @@
 #include <i386/page_table.h>
 #include <stdio.h>
 static DEFINE_PER_CPU(struct page_state, page_state ) = { 0 };
-
+extern struct zone* zone_table[MAX_NR_ZONES*MAX_NUMNODES + 1];
 
 static inline struct zone* page_zone(struct page* pg){
-    return (pg->flags >> NODEZONE_SHIFT);
+    return zone_table[pg->flags >> NODEZONE_SHIFT];
 }
 
 static inline unsigned long page_order(struct page* pg){
