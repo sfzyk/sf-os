@@ -17,14 +17,15 @@ unsigned int jump_num(void **p){
         p = *p;
         ret ++;
     }
+    ret ++;
     return ret;
 }
 
 
 void dump_cachep_info(struct kmem_cache* kmp){
     printf("cache name is  %s \n",kmp->name);
-    printf("        size pointer: %d %d %d. slab-page-num : %d\n", kmp->size, kmp->pointer_size, kmp->object_size,1 << kmp->cache_order);
-    printf("        inuse:%d \n",kmp->inuse);
+    printf("        size pointer: %d %d %d. slab-page-num : %d ", kmp->size, kmp->pointer_size, kmp->object_size,1 << kmp->cache_order);
+    printf(" inuse:%d \n",kmp->inuse);
     if(kmp->cpu_slab->page){
         printf("current slab : %x %d/ %d \n", page_address(kmp->cpu_slab->page),jump_num(kmp->cpu_slab->freelist),kmp->cpu_slab->page->objects);
     }else{
@@ -39,6 +40,7 @@ void dump_cachep_info(struct kmem_cache* kmp){
 void test_dump_all_cahep(){
     struct list_head *pos;
     list_for_each(pos,&cache_list_head){
+        printf("---------\n");
         dump_cachep_info(list_entry(pos,struct kmem_cache,head));
     }
 }
@@ -56,8 +58,8 @@ void test_slub(){
     t1_o2 = kmem_cache_alloc(test1, 0);
     t1_o3 = kmem_cache_alloc(test1, 0);
     printf("test1 cache alloc result : %x %x %x\n",t1_o1,t1_o2,t1_o3);
-    test_dump_all_cahep();
-    
+    // test_dump_all_cahep();
+
     terminal_initialize();
     kmem_cache_free(test1, t1_o1);
     kmem_cache_free(test1, t1_o2);

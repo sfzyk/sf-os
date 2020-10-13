@@ -160,7 +160,7 @@ static inline struct page* new_slab(struct kmem_cache *cachep, int flags){
     unsigned int page_nums = 1 << cachep->cache_order;
     unsigned int pointer_size = sizeof(void *);
     unsigned int slab_byte_size = page_nums << PAGE_SHIFT;
-    unsigned int slab_limit = pg + slab_byte_size;
+    unsigned int slab_limit = (unsigned char*)pg + slab_byte_size;
 
     unsigned char *p = (unsigned char *)pg + cachep->offset;
     /*
@@ -172,7 +172,7 @@ static inline struct page* new_slab(struct kmem_cache *cachep, int flags){
     unsigned int obj_num = 0 ;
     /* could be calculated , but i just dont do that */
 
-    while(p + (pointer_size + cachep->size)*2 - cachep->offset< slab_limit){
+    while(p + cachep->object_size < slab_limit){
         *(unsigned int *)p = p + cachep->object_size;
         p = *(unsigned int *)p;
         obj_num ++ ;
@@ -195,7 +195,6 @@ static inline void init_cpu_slub(struct kmem_cache * kmem,int flags){
     * */
     kmem->cpu_slab = (struct kmem_cache_cpu *)kmem_cache_alloc(&kmem_cache_cpu_cache, flags); 
     kmem->cpu_slab->freelist = NULL; 
-
     kmem->cpu_slab->page = NULL;
     kmem->cpu_slab->partial = NULL;
 
@@ -288,7 +287,7 @@ restart :
     if(c->page){ /* now we get it from the very first level page pool for slab */
         void * address  = page_address(c->page);
         void ** free_list_head = cachep->cpu_slab->freelist;
-        return_obj_p = free_list_head - cachep->offset;
+        return_obj_p = (unsigned char *)free_list_head - cachep->offset;
         cachep->cpu_slab->freelist = *free_list_head;
         if(*cachep->cpu_slab->freelist == NULL){ /*a slab ends its life, then become ghost :) */
             cachep->cpu_slab->page = NULL;
