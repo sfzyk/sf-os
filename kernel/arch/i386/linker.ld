@@ -12,7 +12,7 @@ SECTIONS
 	   loaded at by the bootloader. */
 	/* left valueable DMA zone */
 	
-	. = 16M;
+	. = 1M;
 	__kernel_physical_address_start = . ;
 
 	.boottext :
@@ -67,10 +67,9 @@ SECTIONS
 		*(.bss)
 		*(COMMON)	
 	}
-	
-	 
 	__kernel_virtual_address_end = . ;
 
+	. = 0xc0000000 + 16M;
 	page_start = .;  
 	/*temperal page table just two table for first 8M memory */
 	/* The compiler may produce other sections, put them in the proper place in

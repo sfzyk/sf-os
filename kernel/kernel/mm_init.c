@@ -99,7 +99,6 @@ void zone_sizes_init(void){
     /*
     *
     */
-
 }
 
 /*

@@ -158,7 +158,7 @@ void __free_pages(struct page* pg, unsigned int order){
 
         if(not_in_zone(zone,buddy))
         break;
-        if(!page_is_buddy(pg_idx,order))
+        if(!page_is_buddy(buddy,order))
         break;
 
         list_del(&buddy->lru);
