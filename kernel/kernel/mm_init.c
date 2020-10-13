@@ -82,7 +82,7 @@ void zone_sizes_init(void){
     }else{
         zones_size[DMA_ZONE] = max_dma_pfn;
         zones_size[NORMAL_ZONE] = low - max_dma_pfn;
-        zones_size[HIGH_ZONE] = high;
+        zones_size[HIGH_ZONE] = high - low;
     }
 
     /*
@@ -108,8 +108,8 @@ void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
     mem_map= pgt->node_mem_map = page_desc_start;
     unsigned int page_desc_size = max_pfn * sizeof(struct page) ;
 
-    unsigned int reverse_pfn_start = __kernel_physical_address_start >> PAGE_SHIFT;
-    unsigned int reverse_pfn = kaddr_to_pfn((void *)page_desc_start + page_desc_size);
+    unsigned int kernel_reverse_pfn_end = (__pa((unsigned int)(&__kernel_virtual_address_end)))>> PAGE_SHIFT;
+    unsigned int kernel_page_reverse_pfn = kaddr_to_pfn((void *)page_desc_start + page_desc_size);
 
     unsigned count = 0;
     unsigned zones_limit=0;
@@ -138,7 +138,7 @@ void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
     for(int i=0;i<max_pfn;i++){ 
 
         mem_map[i].private = 0;
-        if(i < reverse_pfn && i > reverse_pfn_start){ /*reversed  page*/
+        if((i<= kernel_page_reverse_pfn && i > (0x01000000 >> PAGE_SHIFT))|| (i<kernel_reverse_pfn_end)){ /*reversed  page: kernel data &kernel code & < 1M */
             SetPageReserved(&mem_map[i]);
             atomic_set(&mem_map[i]._count, 0); /*i cant free a reversed page */
         }else{

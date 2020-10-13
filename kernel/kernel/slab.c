@@ -161,7 +161,8 @@ static inline struct page* new_slab(struct kmem_cache *cachep, int flags){
     unsigned int pointer_size = sizeof(void *);
     unsigned int slab_byte_size = page_nums << PAGE_SHIFT;
     unsigned int slab_limit = pg + slab_byte_size;
-    unsigned int  * p = pg + cachep->offset;
+
+    unsigned char *p = (unsigned char *)pg + cachep->offset;
     /*
     *
     *  init free list
@@ -172,18 +173,18 @@ static inline struct page* new_slab(struct kmem_cache *cachep, int flags){
     /* could be calculated , but i just dont do that */
 
     while(p + (pointer_size + cachep->size)*2 - cachep->offset< slab_limit){
-        *p = p + cachep->object_size;
-        p = *p;
+        *(unsigned int *)p = p + cachep->object_size;
+        p = *(unsigned int *)p;
         obj_num ++ ;
     }
 
-    *p = 0; /* the end of list */
+    *(unsigned int *)p = 0; /* the end of list */
     obj_num ++ ;
     page->inuse = page->objects = obj_num;
     page->frozen = 1; /* when i get a slab it must be currently used */
-    cachep->cpu_slab->freelist = pg + cachep->offset; /* understand void ** */
+    cachep->cpu_slab->freelist = (unsigned char*)pg + cachep->offset; /* understand void ** */
 
-    return (struct page*)pg;
+    return page;
 }
  
 static inline void init_cpu_slub(struct kmem_cache * kmem,int flags){
@@ -265,9 +266,11 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,
      */
     set_cpu_partial(kmem_cache_desc);
     set_min_partial(kmem_cache_desc, ilog2(size)/2 );
-
+ 
     init_cpu_slub(kmem_cache_desc, flags);
     init_pernode_slab(kmem_cache_desc, flags);
+
+    list_add(&cache_list_head, &kmem_cache_desc->head);
     return kmem_cache_desc;
 }
 /*

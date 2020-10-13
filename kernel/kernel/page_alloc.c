@@ -37,6 +37,7 @@ static inline struct page * expand(struct zone * z, struct page * pg, int low, i
         fa->nr_free += 1;
         z->free_pages += size;
         set_page_order(&pg[size],size);
+        low ++;
     }
     return pg;
 }
@@ -152,13 +153,13 @@ void __free_pages(struct page* pg, unsigned int order){
     unsigned int pg_idx = pg - base;
     int order_size = 1 << order; 
     int buddy_idx;
-    while(order < MAX_ORDER){
+    while(order < MAX_ORDER-1){/* max at 9 to 10*/
         buddy_idx  = (pg_idx ^( 1<<order ));
         struct page* buddy = base + buddy_idx;
 
-        if(not_in_zone(zone,buddy))
+        if(not_in_zone(zone,buddy))     /* buddy not in zone */
         break;
-        if(!page_is_buddy(buddy,order))
+        if(!page_is_buddy(buddy,order)) /* buddy not in buddy */
         break;
 
         list_del(&buddy->lru);
