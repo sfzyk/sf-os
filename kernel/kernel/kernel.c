@@ -24,7 +24,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
 	terminal_initialize();
 	printf("test-begin-all-parts\n\n");
-
 	test_slub();
 	printf("slub has been test well\n\n");
 

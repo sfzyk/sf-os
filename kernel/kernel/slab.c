@@ -105,7 +105,6 @@ void init_kmem_cache(void){
         kmem_cache_node_cache.node[0]=&n3;
         init_list(&n3.partial);
     }
-
 }
 
 

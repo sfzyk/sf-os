@@ -44,11 +44,19 @@ void test_dump_all_cahep(){
         dump_cachep_info(list_entry(pos,struct kmem_cache,head));
     }
 }
- 
+
+
+/*
+*
+* test case for slub system (to do more)
+*
+*/
+
 void test_slub(){
     struct kmem_cache *test1,*test2;
-    test1 = kmem_cache_create("test1 cache",54,16,0,1,NULL);
-    test2 = kmem_cache_create("tes2 cache",58,128,0,0,NULL);
+    char * name = "for purpose";
+    test1 = kmem_cache_create(name ,54,16,0,2,NULL);
+    // test2 = kmem_cache_create("tes2 cache",58,128,0,0,NULL);
 
     printf("localtion test1 cache : %x , test2 cache: %x\n",test1, test2);
 
@@ -58,11 +66,14 @@ void test_slub(){
     t1_o2 = kmem_cache_alloc(test1, 0);
     t1_o3 = kmem_cache_alloc(test1, 0);
     printf("test1 cache alloc result : %x %x %x\n",t1_o1,t1_o2,t1_o3);
-    // test_dump_all_cahep();
+    test_dump_all_cahep();
 
-    terminal_initialize();
+    // terminal_initialize();
     kmem_cache_free(test1, t1_o1);
     kmem_cache_free(test1, t1_o2);
     kmem_cache_free(test1, t1_o3);
-    test_dump_all_cahep();
+    // test_dump_all_cahep();
+    /*
+    to fix tty code 
+    */
 }
