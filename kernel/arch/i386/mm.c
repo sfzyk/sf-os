@@ -10,7 +10,7 @@ extern pgd_t global_page_dir[1024];
 extern pte_t *page_start;
 extern struct pglist_data global_mem_node;
 struct page* mem_map;
-struct zone* zone_table[1 <<(MAX_NR_ZONES *MAX_NUMNODES)+1]; // ? 
+struct zone* zone_table[1 <<(MAX_NR_ZONES * MAX_NUMNODES)+1]; // ? 
 void zone_sizes_init(void);
 void init_page_table(pgd_t *pgd_base,pte_t* pte_base);
 
