@@ -9,9 +9,10 @@
 extern int start_pfn,max_pfn,max_low_pfn;
 extern pte_t page_start;
 extern unsigned int __kernel_virtual_address_end;
+extern unsigned int __kernel_physical_address_start;
 extern struct page* mem_map;
-extern struct zone* zone_table;
-struct pglist_data global_mem_node;
+extern struct zone*  __attribute__((used)) zone_table[(MAX_NR_ZONES *MAX_NUMNODES)+1]; 
+struct pglist_data  __attribute__((used)) global_mem_node;
 
 pte_t * page_desc_start;
 free_page(struct page*);
@@ -22,7 +23,7 @@ free_page(struct page*);
 *
 */
 int is_kernel_text(unsigned int address){
-    return address > PAGE_OFFSET && address < __kernel_virtual_address_end;
+    return address > PAGE_OFFSET + __kernel_physical_address_start && address < __kernel_virtual_address_end;
 }
 
 /*
@@ -45,7 +46,7 @@ void init_page_table(pgd_t *pgd_base,pte_t* pte_base){
     for(;pgd_start_index < PTRS_PER_PGD;pgd++,pgd_start_index++){
         unsigned int address = pfn* PAGE_SIZE + PAGE_OFFSET ;
 
-        for(int pte_ofs=0;pte_ofs<PTRS_PER_PTE;pte++, pte_ofs++,pfn++ ){
+        for(int pte_ofs = 0;pte_ofs < PTRS_PER_PTE;pte++, pte_ofs++,pfn++ ){
 
             if(is_kernel_text(address)){
                 set_pte(pte, pfn_pte(pfn, _PAGE_KERNEL_EXEC));
@@ -81,16 +82,8 @@ void zone_sizes_init(void){
     }else{
         zones_size[DMA_ZONE] = max_dma_pfn;
         zones_size[NORMAL_ZONE] = low - max_dma_pfn;
-        zones_size[HIGH_ZONE] = high;
+        zones_size[HIGH_ZONE] = high - low;
     }
-
-    /*
-    *
-    */
-    for(unsigned int i = 0;i< MAX_NR_ZONES;i++){
-        zone_table[i] = global_mem_node.node_zones[i];
-    }
-
 
     /*
     * calulate the page status
@@ -102,19 +95,21 @@ void zone_sizes_init(void){
 
     global_mem_node.node_spanned_pages = global_mem_node.node_present_pages = usedpages ;
 
-
     node_alloc_mem_map(&global_mem_node, &zones_size);
+    /*
+    *
+    */
 }
 
-
 /*
-*
 *  init page descriptor 
 */
 void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
     mem_map= pgt->node_mem_map = page_desc_start;
     unsigned int page_desc_size = max_pfn * sizeof(struct page) ;
-    unsigned int reverse_pfn = kaddr_to_pfn((void *)page_desc_start + page_desc_size);
+
+    unsigned int kernel_reverse_pfn_end = (__pa((unsigned int)(&__kernel_virtual_address_end)))>> PAGE_SHIFT;
+    unsigned int kernel_page_reverse_pfn = kaddr_to_pfn((void *)page_desc_start + page_desc_size);
 
     unsigned count = 0;
     unsigned zones_limit=0;
@@ -136,15 +131,42 @@ void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
         }
     }
 
+    for(unsigned int i = 0;i< MAX_NR_ZONES;i++){
+        zone_table[i] = &global_mem_node.node_zones[i];
+    }
     
     for(int i=0;i<max_pfn;i++){ 
 
-        if(i < reverse_pfn){
-            SetPageReserved(&mem_map[i] );
+        mem_map[i].private = 0;
+        if((i<= kernel_page_reverse_pfn && i > (0x01000000 >> PAGE_SHIFT))|| (i<kernel_reverse_pfn_end)){ /*reversed  page: kernel data &kernel code & < 1M */
+            SetPageReserved(&mem_map[i]);
+            atomic_set(&mem_map[i]._count, 0); /*i cant free a reversed page */
+        }else{
             atomic_set(&mem_map[i]._count, -1);
-        }    
+            free_page(&mem_map[i]);
+        }
+    }
+}
 
-        mem_map[i].private = -1;
-        free_page(&mem_map[i]);
+/*init for zonelist */
+void init_build_zonelist(pg_data_t* mem_node){
+    
+    for(int i =0 ;i<GFP_ZONETYPES;i++){
+        int DMA = 0,HIGH = 0;
+        DMA = __GFP_DMA & i;
+        HIGH = __GFP_HIGH &i;
+        int p = 0;
+        while(DMA|HIGH){
+            if(DMA){
+                mem_node->node_zonelists[i].zones[p] = &mem_node->node_zones[DMA_ZONE];
+                DMA =0 ;
+            }
+            else if(HIGH){
+               mem_node->node_zonelists[i].zones[p] = &mem_node->node_zones[HIGH_ZONE];
+               HIGH =0;
+            }
+            p++;
+        }
+        mem_node->node_zonelists[i].zones[p] = &mem_node->node_zones[NORMAL_ZONE];
     }
 }

@@ -15,6 +15,8 @@
 #define __GFP_DMA	0x01
 #define __GFP_HIGHMEM	0x02
 
+#define GFP_ZONEMASK	0x03
+
 /*
  * Action modifiers - doesn't change the zoning
  *
@@ -135,23 +137,33 @@ struct page_state {
 
 #define PageChecked(page)	test_bit(PG_checked, &(page)->flags)
 #define SetPageChecked(page)	set_bit(PG_checked, &(page)->flags)
-#define ClearPageChecked(page)	clear_bit(PG_checked, &(page)->flags)
+#define ClearPageChecked(page)	clear_bit(PG_checked,&(page)->flags)
 
 #define PageReserved(page)	test_bit(PG_reserved, &(page)->flags)
 #define SetPageReserved(page)	set_bit(PG_reserved, &(page)->flags)
 #define ClearPageReserved(page)	clear_bit(PG_reserved, &(page)->flags)
-#define __ClearPageReserved(page)	__clear_bit(PG_reserved, &(page)->flags)
+#define __ClearPageReserved(page)	__clear_bit(PG_reserved,&(page)->flags)
 
-#define SetPagePrivate(page)	set_bit(PG_private, &(page)->flags)
+#define SetPagePrivate(page)	set_bit(PG_private,&(page)->flags)
 #define ClearPagePrivate(page)	clear_bit(PG_private, &(page)->flags)
 #define PagePrivate(page)	test_bit(PG_private, &(page)->flags)
 
+
+#define SetPageSlab(page)	set_bit(PG_slab,&(page)->flags)
+#define ClearPageSlab(page) clear_bit(PG_slab, &(page)->flags)
+#define PageSlab(page)	test_bit(PG_slab,&(page)->flags)
+
+
 /* no difference between SetPagePrivate and __SetPagePrivete by sf*/
-#define __SetPagePrivate(page)  set_bit(PG_private, &(page)->flags)
-#define __ClearPagePrivate(page) __clear_bit(PG_private, &(page)->flags)
+#define __SetPagePrivate(page)  set_bit(PG_private,&(page)->flags)
+#define __ClearPagePrivate(page) __clear_bit(PG_private,&(page)->flags)
 
 
-
+/*
+*
+* we need define which page in highmem 
+*
+*/
 #ifdef CONFIG_HIGHMEM
 #define PageHighMem(page)	test_bit(PG_highmem, &(page)->flags)
 #else

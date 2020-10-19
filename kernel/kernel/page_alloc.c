@@ -4,11 +4,12 @@
 #include <i386/smp.h>
 #include <i386/config.h>
 #include <i386/page_table.h>
-static DEFINE_PER_CPU(struct page_state, page_state ) = { 0}; 
-
+#include <stdio.h>
+static DEFINE_PER_CPU(struct page_state, page_state ) = { 0 };
+extern struct zone*  __attribute__((used))  zone_table[MAX_NR_ZONES*MAX_NUMNODES + 1];
 
 static inline struct zone* page_zone(struct page* pg){
-    return (pg->flags >> NODEZONE_SHIFT);
+    return zone_table[pg->flags >> NODEZONE_SHIFT];
 }
 
 static inline unsigned long page_order(struct page* pg){
@@ -36,6 +37,7 @@ static inline struct page * expand(struct zone * z, struct page * pg, int low, i
         fa->nr_free += 1;
         z->free_pages += size;
         set_page_order(&pg[size],size);
+        low ++;
     }
     return pg;
 }
@@ -91,7 +93,7 @@ static inline void __free_pages_bulk(struct zone* z , struct page * page , struc
 */
 static struct page*  buffered_rmqueue(struct zone *zone, int order,int gfp_flags){
     unsigned long flags;
-    struct page * pg;
+    struct page * pg = NULL; /*important to initlize */
     int cold = !!(gfp_flags && __GFP_COLD) ;
     if(order == 0){// time to use buffered page 
         struct per_cpu_pages *pcp ;
@@ -125,16 +127,16 @@ static struct page*  buffered_rmqueue(struct zone *zone, int order,int gfp_flags
 */
 static inline int page_is_buddy(struct page *page, int order)
 {
-       if (PagePrivate(page)           &&
-           (page_order(page) == order) &&
-           !PageReserved(page)         &&
-            page_count(page) == 0)
+       if (PagePrivate(page)           &&    /* privite 字段有东西*/
+           (page_order(page) == order) &&    /* 同阶*/
+           !PageReserved(page)         &&    /* 非保留*/
+            page_count(page) == 0)           /* ???*/
                return 1;
        return 0;
 }
 
 static inline int not_in_zone(struct zone* z, struct page* pg){
-    if(pg<z->zone_mem_map || pg>z->zone_mem_map+z->spanned_pages){
+    if(pg < z->zone_mem_map || pg>z->zone_mem_map+z->spanned_pages){
         return 1;
     }
     return 0;
@@ -146,30 +148,31 @@ static inline int not_in_zone(struct zone* z, struct page* pg){
 
 void __free_pages(struct page* pg, unsigned int order){
     struct zone* zone = page_zone(pg);
+    // printf("%x", zone);
     struct page* base = zone->zone_mem_map;
     unsigned int pg_idx = pg - base;
     int order_size = 1 << order; 
     int buddy_idx;
-    while(order < MAX_ORDER){
+    while(order < MAX_ORDER-1){/* max at 9 to 10*/
         buddy_idx  = (pg_idx ^( 1<<order ));
         struct page* buddy = base + buddy_idx;
 
-        if(not_in_zone(zone,buddy))
+        if(not_in_zone(zone,buddy))     /* buddy not in zone */
         break;
-        if(!page_is_buddy(pg_idx,order))
+        if(!page_is_buddy(buddy,order)) /* buddy not in buddy */
         break;
 
-        list_del(& buddy->lru);
+        list_del(&buddy->lru);
         struct free_area* area = &zone->free_area[order];
         area->nr_free --;
         pg_idx &= buddy_idx;
         order ++;
     }
 
-    struct page* col = base + buddy_idx;
+    struct page* col = base + pg_idx;
     set_page_order(col,order);
-    list_add(&col->lru, &zone->free_area[order].head);
-	zone->free_area[order].nr_free++;
+    list_add(&zone->free_area[order].head, &col->lru);
+	zone->free_area[order].nr_free += 1;
 }
 
 /*
@@ -183,9 +186,12 @@ void free_page(struct page * pg){
  *              
  * 
  * 
-/* heart of buddy alloctor */ 
+/* heart of buddy system alloctor */ 
 /* todo: rebalance and more scan */
+/* todo: alloc normal zone first */
+
 struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zonelist *zonelist){
+    
     struct page * pg;
     struct zone** zones;
     struct zone * z;
@@ -194,7 +200,7 @@ struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zo
     class_zoneidx = zones[0] - zones[0]->pglist->node_zones; 
 
 
-    for(int i =0;(z=zones[i]!=0);i++ ){
+    for(int i =0;((z=zones[i])!=0);i++ ){
 
         pg = buffered_rmqueue(z,order,gfp_mask); // ? 
 
@@ -203,11 +209,13 @@ struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, struct zo
         }
 
     }
+
     if(!pg){
         goto nopg;
     }
 
     got_pg:
+      
         return pg;
     nopg:
         return -1;

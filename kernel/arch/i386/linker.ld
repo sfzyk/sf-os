@@ -10,8 +10,9 @@ SECTIONS
 {
 	/* Begin putting sections at 1 MiB, a conventional place for kernels to be
 	   loaded at by the bootloader. */
+	/* left valueable DMA zone */
+	
 	. = 1M;
- 
 	__kernel_physical_address_start = . ;
 
 	.boottext :
@@ -46,11 +47,11 @@ SECTIONS
 	{
 		*(.text)
 	}
-	
 	 
 	.rodata BLOCK(4K) : AT(((LOADADDR(.text)+SIZEOF(.text) + 0xfff) & 0xcffff000)) ALIGN(4K)
 	{
 		*(.rodata)
+		*(.rodata.str1.*)
 	}
 
 
@@ -60,16 +61,15 @@ SECTIONS
 	}
 
 	
-	.bss BLOCK(4K) : AT( (LOADADDR(.data) + SIZEOF(.data)+ 0xfff)&0xcffff000 ) ALIGN(4K)  
+	.bss BLOCK(4K) : AT( ((LOADADDR(.data) + SIZEOF(.data)+ 0xfff)&0xcffff000 )) ALIGN(4K)  
 	{
 		*(.bss.pagedir)   /* page table must aligned at 256 byte at least : please see i386 manual */
 		*(.bss)
 		*(COMMON)	
 	}
-	
-	 
 	__kernel_virtual_address_end = . ;
 
+	. = 0xc0000000 + 16M;
 	page_start = .;  
 	/*temperal page table just two table for first 8M memory */
 	/* The compiler may produce other sections, put them in the proper place in

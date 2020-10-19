@@ -21,7 +21,7 @@ dont support numa for now
 #define TYPE_ZONES_SHIFT 2 
 #define NUMNODES_SHIFT 0 
 
-#define GFP_ZONETYPES 3
+#define GFP_ZONETYPES 4
 
 
 
@@ -112,11 +112,31 @@ struct page{
 
     unsigned long index;
 
-    struct list_head lru;// struct list_head when page is free 
+	struct {			/* SLUB */
+		unsigned inuse:15;
+		unsigned objects:15;
+		unsigned buddy:1;
+		unsigned frozen:1;  /*frozen means it currently been used */
+	};
+	void ** free_list; /* SLUB */
+	union{
+    	struct list_head lru;
+		struct page* next; 
+		/* SLUB  use in cpu slab , or in buddy slub */
+	};
+
+	unsigned int pobjects;/* all slab in a paritial list */
+
+	/*
+		page　free : struct list_head when page is free 
+		page in slub : the next pointer
+
+	*/
 };
 
 void mm_page_init(multiboot_info_t* );
 void node_alloc_mem_map(struct pglist_data*,unsigned int *);
+
 
 
 #endif 

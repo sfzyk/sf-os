@@ -21,8 +21,11 @@ stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
 .align 4096
-pg0: 
-.fill 2048,4,0 
+pg0:   # code&data for kernel 
+.fill 1024,4,0
+
+pg4:   # page descriptor
+.fill 1024,4,0 
 
 
 # The kernel entry point.
@@ -45,7 +48,8 @@ _start:
 	pushl  %ebx 
 	#detected memory map
 
-	# enable pageing 
+	# enable pageing
+	# kernel code & kernel data 
 	movl $pg0, %eax 
 	movl $global_page_dir - PAGE_OFFSET ,%ebx
 	leal 0x007(%eax), %edx  #page dir entry 
@@ -61,6 +65,23 @@ _start:
 	addl $0x1000, %eax 
 	loop 2b
 
+	#kernel page table & all page descriptor
+	movl $pg4, %eax 
+	movl $global_page_dir - PAGE_OFFSET ,%ebx
+	leal 0x007(%eax), %edx  #page dir entry 
+	movl %edx, 0x010(%ebx)
+	movl %edx, 0xc10(%ebx) #that is 0xc00 not 0x300 ,cost me 3 hours, fx
+1:
+	movl $0x01000007, %eax 
+	movl $pg4, %edi 
+	cld 
+	movl $1024, %ecx
+2:
+	stosl
+	addl $0x1000, %eax 
+	loop 2b
+
+	# enable paging 
 	movl $global_page_dir - 0xc0000000 ,%eax 
 	movl %eax, %cr3 
 
