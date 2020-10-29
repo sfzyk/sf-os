@@ -34,9 +34,35 @@ typedef struct prio_array{
 }prio_array_t;
 
 
+struct thread_struct {
+/* cached TLS descriptors. */
+	// struct desc_struct tls_array[GDT_ENTRY_TLS_ENTRIES];
+	unsigned long	esp0;
+	unsigned long	sysenter_cs;
+	unsigned long	eip;
+	unsigned long	esp;
+	unsigned long	fs;
+	unsigned long	gs;
+/* Hardware debugging registers */
+	unsigned long	debugreg[8];  /* %%db0-7 debug registers */
+/* fault info */
+	unsigned long	cr2, trap_no, error_code;
+// /* floating point info */
+// 	union i387_union	i387;
+// /* virtual 86 mode info */
+// 	struct vm86_struct __user * vm86_info;
+	unsigned long		screen_bitmap;
+	unsigned long		v86flags, v86mask, saved_esp0;
+	unsigned int		saved_fs, saved_gs;
+/* IO permissions */
+	unsigned long	*io_bitmap_ptr;
+/* max allowed port in the bitmap, in bytes: */
+	unsigned long	io_bitmap_max;
+};
 
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
+	volatile long preempt_count;
 	struct thread_info *thread_info;
 	atomic_t usage;
 	unsigned long flags;	/* per process flags, defined below */
@@ -55,8 +81,9 @@ struct task_struct {
 	unsigned long policy;
 	cpumask_t cpus_allowed;
 	unsigned int time_slice, first_time_slice;
- 
-
+	
+	struct thread_struct thread;
+	
 	struct list_head tasks;
 	/*
 	 * ptrace_list/ptrace_children forms the list of my children
