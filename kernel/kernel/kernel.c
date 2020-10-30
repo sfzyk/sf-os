@@ -11,8 +11,7 @@
 
 extern unsigned int *page_start;
 void segment_init();
-
-
+void trap_init();
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 	//segment_init();
@@ -26,5 +25,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 	printf("test-begin-all-parts\n\n");
 	test_slub();
 	printf("slub has been test well\n\n");
+	
+	terminal_initialize();
+
+	trap_init();
 
 }
