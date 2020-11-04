@@ -42,13 +42,16 @@ struct hw_interrupt_type no_irq_type = {
 	.set_affinity = ((void *)0)
 };
 
+extern char codeToChar(unsigned char code);
 
 fastcall unsigned int __do_IRQ(unsigned int irq, struct pt_regs *regs)
 {
 	irq_desc[irq].handler->ack(irq);
 
 	unsigned char scancode = inb(0x60);
-	printf("%d %c\n",irq,scancode);
+	unsigned char c = codeToChar(scancode);
+	if(c >= 'a' && c <= 'z')
+		printf("%c",c);
 
 	irq_desc[irq].handler->enable(irq);
 }

@@ -11,8 +11,8 @@ struct pt_regs {
 	long eax;
 	long xds;
 	long xes;
-	long xfs;
-	long xgs;
+//	long xfs;
+//	long xgs;
 	long orig_eax;
 	long eip;
 	long xcs;
