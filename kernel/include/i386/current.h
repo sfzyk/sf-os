@@ -1,5 +1,5 @@
-#ifndef _I386_CURRENT_H
-#define _I386_CURRENT_H
+#ifndef _I386_CURRENT_H__
+#define _I386_CURRENT_H__
 #include <i386/thread.h>
 
 struct task_struct;

@@ -1,6 +1,7 @@
 #include <kernel/segment.h>
 #include <i386/page.h>
 
+
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
 .set FLAGS,    ALIGN | MEMINFO  # this is the Multiboot 'flag' field
@@ -35,6 +36,8 @@ pg4:   # page descriptor
 _start:
 	#change segment 
 	lgdt cpu_gdt_descr
+	lidt cpu_idt_descr
+
 	mov $(__KERNEL_DS), %ecx 
 	mov %ecx, %ds
 	mov %ecx, %es
@@ -95,6 +98,8 @@ _start:
 	
 	#init for idt table 
 	call setup_ign_idt
+
+	
 	
 	# Call the global constructors.
 	call _init

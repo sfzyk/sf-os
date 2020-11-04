@@ -1,7 +1,6 @@
 #include <kernel/segment.h>
-#define ENTRY(name) \
-  .globl name; \
-  name:
+#include <kernel/linkage.h>
+#include <i386/irq_vectors.h>
 
 EBX		= 0x00
 ECX		= 0x04
@@ -18,6 +17,46 @@ CS		= 0x2C
 EFLAGS		= 0x30
 OLDESP		= 0x34
 OLDSS		= 0x38
+
+#define SAVE_ALL \
+	cld; \
+	pushl %es; \
+	pushl %ds; \
+	pushl %eax; \
+	pushl %ebp; \
+	pushl %edi; \
+	pushl %esi; \
+	pushl %edx; \
+	pushl %ecx; \
+	pushl %ebx; \
+	movl $(__USER_DS), %edx; \
+	movl %edx, %ds; \
+	movl %edx, %es;
+
+# hard interrupt
+.data
+ENTRY(interrupt)
+.text
+
+vector = 0
+ENTRY(irq_entries_start)
+.rept NR_IRQS
+    ALIGN
+1: pushl $vector-256
+    jmp common_interrupt
+.data
+    .long 1b
+.text
+vector=vector+1
+.endr
+
+    ALIGN
+common_interrupt:
+    SAVE_ALL
+    movl %esp, %eax
+    call do_IRQ
+    jmp ret_from_intr
+
 
 ENTRY(divide_error)
     pushl $0               # 0x24
@@ -75,11 +114,12 @@ ret_from_intr:
     andl %esp, %ebp
     movl EFLAGS(%esp), %eax
     movb CS(%esp), %al 
-    testl $x00020003, %eax
+    testl $0x00020003, %eax
     jnz resume_userspace
     jmp resume_kernel 
 resume_kernel:
-    cli
+    # cli   /* smbody: never disable interrupt without preempt*/
+    
     # cmpl $0, 0x14(%esp) ;??? 
     jz need_resched # 如果要调度， 那么恢复的这个内核路径就一定不是中断处理程序
     jmp restore_all
@@ -125,6 +165,8 @@ error_code:
     movl %es, %ecx 
     movl ES(%esp), %edi
     movl ORIG_EAX(%esp), %edx # orign error code 
+    #smbody: why not set  (%esp + ORIG_EAX) = -1 ??????
+    movl %eax, ORIG_EAX(%esp)
     movl %ecx, ES(%esp)
 
     movl $(__USER_DS), %ecx
@@ -133,3 +175,5 @@ error_code:
     movl %esp, %eax
     call *%edi
     jmp ret_from_exception
+
+

@@ -1,5 +1,5 @@
-#ifndef _KERNEL_TTY_H
-#define _KERNEL_TTY_H
+#ifndef __KERNEL_TTY_H__
+#define __KERNEL_TTY_H__
 
 #include <stddef.h>
 

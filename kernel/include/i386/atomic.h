@@ -39,6 +39,22 @@ static inline atomic_sub_and_test(atomic_t *v,int i){
     return c;
 }
 
+static __inline__ void atomic_inc(atomic_t *v)
+{
+	__asm__ __volatile__(
+		"incl %0"
+		:"=m" (v->counter)
+		:"m" (v->counter));
+}
+
+static __inline__ void atomic_dec(atomic_t *v)
+{
+	__asm__ __volatile__(
+		"decl %0"
+		:"=m" (v->counter)
+		:"m" (v->counter));
+}
+
 /*
 
 more function to do (maybe)

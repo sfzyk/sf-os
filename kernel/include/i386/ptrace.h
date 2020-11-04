@@ -1,3 +1,5 @@
+#ifndef __PTRACE_H__
+#define __PTRACE_H__
 
 struct pt_regs {
 	long ebx;
@@ -18,3 +20,5 @@ struct pt_regs {
 	long esp;
 	long xss;
 };
+
+#endif

@@ -35,4 +35,11 @@ static inline __u32 _do_div(void *a, __u32 b, int n)
 
 #define do_div(a, b)    _do_div(&(a), (b), sizeof(a))
 //#define do_mod(a, b)	_do_mod(&(a), (b), sizeof(a))
+
+#define typecheck(type,x) \
+({	type __dummy; \
+	typeof(x) __dummy2; \
+	(void)(&__dummy == &__dummy2); \
+	1; \
+})
 #endif 

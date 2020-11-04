@@ -1,5 +1,5 @@
-#ifndef _ASM_SEGMENT_H
-#define _ASM_SEGMENT_H
+#ifndef __ASM_SEGMENT_H__
+#define __ASM_SEGMENT_H__
 /*
  * The layout of the per-CPU GDT under Linux:
  *

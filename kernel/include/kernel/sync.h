@@ -1,6 +1,8 @@
 #ifndef __SYNC_H__
 #define __SYNC_H__
 
+#include <kernel/preempt.h>
+
 typedef struct {
 	volatile unsigned int slock;
 	unsigned magic;
@@ -47,6 +49,13 @@ static inline void _raw_spin_unlock(spinlock_t *lock)
 	);
 }
 
+static inline void _raw_spin_lock(spinlock_t *lock)
+{
+	__asm__ __volatile__(
+		spin_lock_string
+		:"=m" (lock->slock) : : "memory");
+}
 
+#define DEFINE_SPINLOCK(x) spinlock_t x = SPIN_LOCK_UNLOCKED
 
 #endif

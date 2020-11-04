@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include <i386/config.h> 
-#include <i386/linkage.h>
+#include <kernel/linkage.h>
 #include <kernel/vsnprintf.h> 
 #include <kernel/printk.h>
 
