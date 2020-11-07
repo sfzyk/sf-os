@@ -58,4 +58,21 @@ static inline void _raw_spin_lock(spinlock_t *lock)
 
 #define DEFINE_SPINLOCK(x) spinlock_t x = SPIN_LOCK_UNLOCKED
 
+/* smbody : delete __acquire(lock); */
+#define _spin_lock(lock)	\
+do { \
+	preempt_disable(); \
+	_raw_spin_lock(lock); \
+} while(0)
+
+/* smbody : delete __release(lock); */
+#define _spin_unlock(lock) \
+do { \
+	_raw_spin_unlock(lock); \
+	preempt_enable(); \
+} while (0)
+
+#define spin_lock(lock)		_spin_lock(lock)
+#define spin_unlock(lock)	_spin_unlock(lock)
+
 #endif

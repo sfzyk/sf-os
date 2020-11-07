@@ -42,4 +42,12 @@ static inline __u32 _do_div(void *a, __u32 b, int n)
 	(void)(&__dummy == &__dummy2); \
 	1; \
 })
+
+#define BCD2BIN(val)	(((val) & 0x0f) + ((val)>>4)*10)
+#define BIN2BCD(val)	((((val)/10)<<4) + (val)%10)
+
+/* backwards compat */
+#define BCD_TO_BIN(val) ((val)=BCD2BIN(val))
+#define BIN_TO_BCD(val) ((val)=BIN2BCD(val))
+
 #endif 

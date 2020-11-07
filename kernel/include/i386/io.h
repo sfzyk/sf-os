@@ -43,4 +43,7 @@ static inline void io_wait(void)
 								"2:" );
 }
 
+#define outb_p(v,port) outb(v,port)
+#define inb_p(port) inb(port)
+
 #endif

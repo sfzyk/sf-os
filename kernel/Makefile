@@ -37,6 +37,8 @@ kernel/mm_init.o kernel/page_alloc.o\
 kernel/slab.o kernel/slub.o kernel/test.o\
 kernel/traps.o\
 kernel/handle.o\
+kernel/manage.o\
+kernel/time.o\
 
 OBJS=\
 $(ARCHDIR)/crti.o \

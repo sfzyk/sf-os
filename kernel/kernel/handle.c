@@ -1,6 +1,8 @@
 #include <kernel/linkage.h>
 #include <i386/irq.h>
 #include <i386/io.h>
+#include <i386/config.h>
+#include <kernel/signal.h>
 
 #include <stdio.h>
 
@@ -39,19 +41,61 @@ struct hw_interrupt_type no_irq_type = {
 	.disable = 	disable_none,
 	.ack = 		ack_none,
 	.end = 		end_none,
-	.set_affinity = ((void *)0)
+	.set_affinity = NULL
 };
 
-extern char codeToChar(unsigned char code);
+fastcall int handle_IRQ_event(unsigned int irq, struct pt_regs *regs,
+				struct irqaction *action)
+{
+	int ret, retval = 0, status = 0;
+
+	if (!(action->flags & SA_INTERRUPT))
+		local_irq_enable();
+
+	do {
+		ret = action->handler(irq, action->dev_id, regs);
+		if (ret == IRQ_HANDLED)
+			status |= action->flags;
+		retval |= ret;
+		action = action->next;
+	} while (action);
+/*
+	if (status & SA_SAMPLE_RANDOM)
+		add_interrupt_randomness(irq);
+*/
+	local_irq_disable();
+
+	return retval;
+}
 
 fastcall unsigned int __do_IRQ(unsigned int irq, struct pt_regs *regs)
 {
-	irq_desc[irq].handler->ack(irq);
+	irq_desc_t *desc = irq_desc + irq;
+	struct irqaction * action;
+	unsigned int status;
 
-	unsigned char scancode = inb(0x60);
-	unsigned char c = codeToChar(scancode);
-	if(c >= 'a' && c <= 'z')
-		printf("%c",c);
+//	kstat_this_cpu.irqs[irq]++;
+	if (desc->status & IRQ_PER_CPU) {
+		irqreturn_t action_ret;
 
-	irq_desc[irq].handler->enable(irq);
+		/*
+		 * No locking required for CPU-local interrupts:
+		 */
+		desc->handler->ack(irq);
+		action_ret = handle_IRQ_event(irq, regs, desc->action);
+		/*
+		if (!noirqdebug)
+			note_interrupt(irq, desc, action_ret);
+		*/
+		desc->handler->end(irq);
+		return 1;
+	}
+
+	spin_lock(&desc->lock);
+	desc->handler->ack(irq);
+
+	/*
+	* smbody: todo: IRQ is disabled for whatever reason
+	*/
+	return 1;
 }

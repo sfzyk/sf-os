@@ -3,6 +3,10 @@
 #include <i386/io.h>
 #include <i386/i8259.h>
 #include <i386/irq.h>
+#include <i386/config.h>
+#include <i386/timer.h>
+
+#include <kernel/hooks.h>
 
 /* smbody */
 //	8259A 中的寄存器：
@@ -44,7 +48,7 @@ static struct hw_interrupt_type i8259A_irq_type = {
 	disable_8259A_irq,
 	mask_and_ack_8259A,
 	end_8259A_irq,
-	((void *)0)
+	NULL
 };
 
 void disable_8259A_irq(unsigned int irq)
@@ -72,6 +76,10 @@ void enable_8259A_irq(unsigned int irq)
         outb(cached_slave_mask, PIC_SLAVE_IMR);
     else
         outb(cached_master_mask, PIC_MASTER_IMR);
+	
+	/*smbody: enable irq action*/
+	irq_desc[irq].status = IRQ_PER_CPU;
+
     spin_unlock_irqrestore(&i8259A_lock, flags);
 }
 
@@ -181,17 +189,17 @@ void init_8259A(int auto_eoi)
 	/*
 	 * outb_p - this has to work on a wide range of PC hardware.
 	 */
-	outb(0x11, PIC_MASTER_CMD);	/* ICW1: select 8259A-1 init */
-	outb(0x20 + 0, PIC_MASTER_IMR);	/* ICW2: 8259A-1 IR0-7 mapped to 0x20-0x27 */
-	outb(1U << PIC_CASCADE_IR, PIC_MASTER_IMR);	/* 8259A-1 (the master) has a slave on IR2 */
+	outb_p(0x11, PIC_MASTER_CMD);	/* ICW1: select 8259A-1 init */
+	outb_p(0x20 + 0, PIC_MASTER_IMR);	/* ICW2: 8259A-1 IR0-7 mapped to 0x20-0x27 */
+	outb_p(1U << PIC_CASCADE_IR, PIC_MASTER_IMR);	/* 8259A-1 (the master) has a slave on IR2 */
 	if (auto_eoi)	/* master does Auto EOI */
-		outb(MASTER_ICW4_DEFAULT | PIC_ICW4_AEOI, PIC_MASTER_IMR);
+		outb_p(MASTER_ICW4_DEFAULT | PIC_ICW4_AEOI, PIC_MASTER_IMR);
 	else		/* master expects normal EOI */
-		outb(MASTER_ICW4_DEFAULT, PIC_MASTER_IMR);
-	outb(0x11, PIC_SLAVE_CMD);	/* ICW1: select 8259A-2 init */
-	outb(0x20 + 8, PIC_SLAVE_IMR);	/* ICW2: 8259A-2 IR0-7 mapped to 0x28-0x2f */
-	outb(PIC_CASCADE_IR, PIC_SLAVE_IMR);	/* 8259A-2 is a slave on master's IR2 */
-	outb(SLAVE_ICW4_DEFAULT, PIC_SLAVE_IMR); /* (slave's support for AEOI in flat mode is to be investigated) */
+		outb_p(MASTER_ICW4_DEFAULT, PIC_MASTER_IMR);
+	outb_p(0x11, PIC_SLAVE_CMD);	/* ICW1: select 8259A-2 init */
+	outb_p(0x20 + 8, PIC_SLAVE_IMR);	/* ICW2: 8259A-2 IR0-7 mapped to 0x28-0x2f */
+	outb_p(PIC_CASCADE_IR, PIC_SLAVE_IMR);	/* 8259A-2 is a slave on master's IR2 */
+	outb_p(SLAVE_ICW4_DEFAULT, PIC_SLAVE_IMR); /* (slave's support for AEOI in flat mode is to be investigated) */
 	if (auto_eoi)
 		/*
 		 * in AEOI mode we just have to mask the interrupt
@@ -220,7 +228,7 @@ void init_ISA_irqs (void)
 
 	for (i = 0; i < NR_IRQS; i++) {
 		irq_desc[i].status = IRQ_DISABLED;
-		irq_desc[i].action = ((void *)0);
+		irq_desc[i].action = NULL;
 		irq_desc[i].depth = 1;
 
 		if (i < 16) {
@@ -245,6 +253,7 @@ void  init_IRQ(void)
     
     init_ISA_irqs();
 	/*smbody: enable keyboard interrupt*/
+	enable_8259A_irq(0);
 	enable_8259A_irq(1);
 
     for(i = 0; i < (NR_VECTORS - FIRST_EXTERNAL_VECTOR); i++){
@@ -255,6 +264,9 @@ void  init_IRQ(void)
             set_intr_gate(vector, interrupt[i]);
     }
 
+	setup_pit_timer();
+
+	intr_init_hook();
 }
 
 

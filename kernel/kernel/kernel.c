@@ -16,6 +16,8 @@ void segment_init();
 
 extern void init_IRQ(void);
 
+extern void time_init(void);
+
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 	//segment_init();
 	terminal_initialize();
@@ -34,6 +36,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 	trap_init();
 
 	init_IRQ();
+	time_init();
 
 	local_irq_enable();
 

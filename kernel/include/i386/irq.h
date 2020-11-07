@@ -14,6 +14,26 @@
 typedef int irqreturn_t;
 typedef struct { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 
+#define CPU_MASK_ALL							\
+(cpumask_t) { {								\
+	[0 ... BITS_TO_LONGS(NR_CPUS)-2] = ~0UL,			\
+	[BITS_TO_LONGS(NR_CPUS)-1] = CPU_MASK_LAST_WORD			\
+} }
+
+#define CPU_MASK_NONE							\
+(cpumask_t) { {								\
+	[0 ... BITS_TO_LONGS(NR_CPUS)-1] =  0UL				\
+} }
+
+#define CPU_MASK_CPU0							\
+(cpumask_t) { {								\
+	[0] =  1UL							\
+} }
+
+#define IRQ_NONE	(0)
+#define IRQ_HANDLED	(1)
+#define IRQ_RETVAL(x)	((x) != 0)
+
 struct irqaction {
 	irqreturn_t (*handler)(int, void *, struct pt_regs *);
 	unsigned long flags;
@@ -24,6 +44,16 @@ struct irqaction {
 	int irq;
 	struct proc_dir_entry *dir;
 };
+
+extern irqreturn_t no_action(int cpl, void *dev_id, struct pt_regs *regs);
+extern int request_irq(unsigned int,
+		       irqreturn_t (*handler)(int, void *, struct pt_regs *),
+		       unsigned long, const char *, void *);
+extern void free_irq(unsigned int, void *);
+
+extern void disable_irq_nosync(unsigned int irq);
+extern void disable_irq(unsigned int irq);
+extern void enable_irq(unsigned int irq);
 
 struct hw_interrupt_type {
 	const char * typename;
@@ -48,6 +78,8 @@ typedef struct irq_desc {
 	unsigned int irqs_unhandled;
 	spinlock_t lock;
 } irq_desc_t; /* smbody: should be aligned*/
+
+extern int setup_irq(unsigned int irq, struct irqaction * new);
 
 /*
  * IRQ line status.
@@ -94,6 +126,7 @@ do { \
 	preempt_enable(); \
 } while (0)
 
+#define local_irq_disable() 	__asm__ __volatile__("cli": : :"memory")
 #define local_irq_enable()	__asm__ __volatile__("sti": : :"memory")
 
 #endif
