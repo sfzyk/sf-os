@@ -3,18 +3,27 @@
 
 #include <kernel/preempt.h>
 
+/*smbody" why not add break_lock*/
+
 typedef struct {
 	volatile unsigned int slock;
 	unsigned magic;
 } spinlock_t;
 
+typedef struct {
+	volatile unsigned int lock;
+	unsigned magic;
+} rwlock_t;
+
 #define SPINLOCK_MAGIC	0xdead4ead
- 
 #define SPINLOCK_MAGIC_INIT	 ,SPINLOCK_MAGIC
- 
 #define SPIN_LOCK_UNLOCKED (spinlock_t) { 1 SPINLOCK_MAGIC_INIT }
 
+#define RWLOCK_MAGIC	0xdeaf1eed
+#define RWLOCK_MAGIC_INIT	, RWLOCK_MAGIC
+#define RW_LOCK_BIAS		 0x01000000
 
+#define RW_LOCK_UNLOCKED (rwlock_t) { RW_LOCK_BIAS RWLOCK_MAGIC_INIT }
 
 /*
  * Simple spin lock operations.  There are two variants, one clears IRQ's
@@ -24,6 +33,11 @@ typedef struct {
  */
 #define spin_lock_init(x)	do { *(x) = SPIN_LOCK_UNLOCKED; } while(0)
 #define spin_is_locked(x)	(*(volatile signed char *)(&(x)->slock) <= 0)
+
+#define rwlock_init(x)	do { *(x) = RW_LOCK_UNLOCKED; } while(0)
+#define read_can_lock(x) ((int)(x)->lock > 0)
+#define write_can_lock(x) ((x)->lock == RW_LOCK_BIAS)
+
 
 #define spin_lock_string \
 	"\n1:\t" \
@@ -72,7 +86,41 @@ do { \
 	preempt_enable(); \
 } while (0)
 
+/* smbody : delete __acquire(lock); */
+#define _write_lock(lock) \
+do { \
+	preempt_disable(); \
+	_raw_write_lock(lock); \
+} while(0)
+
+/* smbody : delete __acquire(lock); */
+#define _read_lock(lock)	\
+do { \
+	preempt_disable(); \
+	_raw_read_lock(lock); \
+} while(0)
+
+/* smbody : delete __release(lock); */
+#define _write_unlock(lock) \
+do { \
+	_raw_write_unlock(lock); \
+	preempt_enable(); \
+} while(0)
+
+/* smbody : delete __release(lock); */
+#define _read_unlock(lock) \
+do { \
+	_raw_read_unlock(lock); \
+	preempt_enable(); \
+} while(0)
+
 #define spin_lock(lock)		_spin_lock(lock)
 #define spin_unlock(lock)	_spin_unlock(lock)
+
+#define write_lock(lock)	_write_lock(lock)
+#define write_unlock(lock)	_write_unlock(lock)
+
+#define read_lock(lock)		_read_lock(lock)
+#define read_unlock(lock)	_read_unlock(lock)
 
 #endif
