@@ -133,9 +133,29 @@ struct page{
 
 	*/
 };
-
 void mm_page_init(multiboot_info_t* );
 void node_alloc_mem_map(struct pglist_data*,unsigned int *);
+struct mm_struct;
+
+//内存的线性区
+struct vm_area_struct{
+	struct mm_struct * mm;// 这个线性区属于的内存描述符。
+	unsigned long vm_start;// 线性区的第一个地址。
+	unsigned long vm_end;//线性区之后的第一个地址。
+};
+//红黑树的根节点
+struct rb_root{
+		
+
+};
+
+//内存描述符
+struct mm_struct{
+	struct vm_area_struct * mmap; //线性区的链表头
+	struct rb_root mm_rb;// 根节点
+	struct vm_area_struct * mmap_cache;//最近访问的线性区结构
+
+};
 
 
 

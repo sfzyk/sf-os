@@ -37,8 +37,8 @@ static inline void non_atomic_clear_bit(int nr , volatile unsigned long *addr){
         :"Ir"(nr)
     );
 }
-/*find first bit set*/
 
+/*find first bit set*/
 static inline int ffs(int x)
 {
 	int r = 1;

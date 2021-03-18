@@ -2,8 +2,18 @@
 #define __THREAD_H__
 #include <kernel/list.h>
 #include <i386/atomic.h>
+#include <i386/mm.h>
+
 
 #define THREAD_SIZE (4096)  
+#define TASK_RUNNING 			(1)
+#define TASK_INTERRUPTIBLE 		(2)
+#define TASK_STOPPED			(3)
+#define TASK_TRACED				(4)
+#define TASK_ZOMBIE				(5)
+#define TASK_EXIT_DEAD			(6)
+
+
 typedef unsigned int pid,uid_t,gid_t;
 typedef unsigned int tgid;
 typedef unsigned int cputime_t;
@@ -92,7 +102,7 @@ struct task_struct {
 	struct list_head ptrace_children;
 	struct list_head ptrace_list;
 
-// struct mm_struct *mm, *active_mm;
+	struct mm_struct *mm, *active_mm;
 
 /* task state */
 	struct linux_binfmt *binfmt;

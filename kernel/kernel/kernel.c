@@ -21,10 +21,8 @@ extern void time_init(void);
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 	//segment_init();
 	terminal_initialize();
-	
 	setup_arch(mbd);
-
-	init_kmem_cache();
+	init_kmem_cache(); 
 
 	terminal_initialize();
 	printf("test-begin-all-parts\n\n");
@@ -37,7 +35,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
 	init_IRQ();
 	time_init();
-
+	
+	thread_init(); //初始化线程相关内容，
 	local_irq_enable();
 
 	while(1);
