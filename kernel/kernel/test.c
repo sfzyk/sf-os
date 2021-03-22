@@ -56,10 +56,11 @@ void test_slub(){
     struct kmem_cache *test1,*test2;
     char * name = "for purpose";
     test1 = kmem_cache_create(name ,54,16,0,2,NULL);
-    // test2 = kmem_cache_create("tes2 cache",58,128,0,0,NULL);
+    test2 = kmem_cache_create("tes2 cache",58,128,0,0,NULL);
 
     printf("localtion test1 cache : %x , test2 cache: %x\n",test1, test2);
-    // test_dump_all_cahep();
+    test_dump_all_cahep();
+
     void *t1_o1,*t1_o2,*t1_o3;
     t1_o1 = kmem_cache_alloc(test1, 0);
     t1_o2 = kmem_cache_alloc(test1, 0);
@@ -75,6 +76,7 @@ void test_slub(){
     /*
     to fix tty code 
     */
+   printf("WANING :: test slub end\n");
 }
 
 

@@ -38,9 +38,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 	init_IRQ();
 	time_init();
 	
-	terminal_initialize();
+	//terminal_initialize();
 	kmalloc_init();
-	test_kmalloc();
+	//test_kmalloc();
 
 	thread_init(); //初始化线程相关内容，
 	local_irq_enable();

@@ -15,7 +15,6 @@
 
  void set_cpu_partial(struct kmem_cache *s)
 {
- 
 	/*
 	 * cpu_partial determined the maximum number of objects kept in the
 	 * per cpu partial lists of a processor.

@@ -42,7 +42,7 @@ void init_kmem_cache(void){
     {
         kmem_cache_cache.cache_order = 1;
         kmem_cache_cache.inuse = 0;
-        kmem_cache_cache.name = "kernel used kmem cache(original cache)";
+        sprintf(kmem_cache_cache.name,sizeof(kmem_cache_cache.name), "kernel used kmem cache(original cache)");
         size_t size = sizeof(struct kmem_cache);
         size_t align = 128; /* nonsense */
         size_t pointer_size = sizeof(void *); /* assert pointer_size must be 1<<n */
@@ -64,7 +64,8 @@ void init_kmem_cache(void){
     {
         kmem_cache_cpu_cache.cache_order = 1;
         kmem_cache_cpu_cache.inuse = 0;
-        kmem_cache_cpu_cache.name = "kernel used kmem cpu cache(original cache)";
+        sprintf(kmem_cache_cpu_cache.name,sizeof(kmem_cache_cpu_cache.name), "kernel used kmem cpu cache(original cache)");
+        //kmem_cache_cpu_cache.name = "kernel used kmem cpu cache(original cache)";
         size_t size = sizeof(struct kmem_cache_cpu);
         size_t align = 128; /* nonsense */
         size_t pointer_size = sizeof(void *); /* assert pointer_size must be 1<<n */
@@ -86,7 +87,8 @@ void init_kmem_cache(void){
     {
         kmem_cache_node_cache.cache_order = 1;
         kmem_cache_node_cache.inuse = 0;
-        kmem_cache_node_cache.name = "kernel used kmem node cache(original cache)";
+        sprintf(kmem_cache_node_cache.name,sizeof(kmem_cache_node_cache.name), "kernel used kmem node cache(original cache)");
+        // kmem_cache_node_cache.name = "kernel used kmem node cache(original cache)";
         size_t size = sizeof(struct kmem_cache_node);
         size_t align = 128; /* nonsense */
         size_t pointer_size = sizeof(void *); /* assert pointer_size must be 1<<n */
@@ -227,7 +229,7 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,
     if(!name){
         return NULL;
     }
-
+    
     /*
     * todo :
     * do something with flags 
@@ -237,6 +239,7 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size, size_t align,
     struct kmem_cache* kmem_cache_desc = (struct kmem_cache*)kmem_cache_alloc(&kmem_cache_cache, flags); 
     kmem_cache_desc->allocflags = flags;
     kmem_cache_desc->ctor = ctor;
+    sprintf(kmem_cache_desc->name,sizeof(kmem_cache_desc->name),name);
     /*
     *
     *   obj size staff: see slab.h for more information 

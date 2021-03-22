@@ -37,7 +37,7 @@ struct kmem_cache {
     int inuse ;
     int  align;
     int reserved;
-    const char * name;
+    char name[32];
     struct list_head head;
     /*
     * todo : sysfs and cgroup 
