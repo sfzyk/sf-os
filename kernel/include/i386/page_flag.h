@@ -69,7 +69,7 @@
 #define PG_slab			 7	/* slab debug (Suparna wants this) */
 
 #define PG_highmem		 8
-#define PG_checked		 9	/* kill me in 2.5.<early>. */
+#define PG_KMEM		 	 9	/* if pg alloc by kmem */
 #define PG_arch_1		10
 #define PG_reserved		11
 
@@ -135,9 +135,9 @@ struct page_state {
 	unsigned long pgrotated;	/* pages rotated to tail of the LRU */
 };
 
-#define PageChecked(page)	test_bit(PG_checked, &(page)->flags)
-#define SetPageChecked(page)	set_bit(PG_checked, &(page)->flags)
-#define ClearPageChecked(page)	clear_bit(PG_checked,&(page)->flags)
+#define PageKmem(page)	test_bit(PG_KMEM, &(page)->flags)
+#define SetPageKmem(page)	set_bit(PG_KMEM, &(page)->flags)
+#define ClearPageKmem(page)	clear_bit(PG_KMEM,&(page)->flags)
 
 #define PageReserved(page)	test_bit(PG_reserved, &(page)->flags)
 #define SetPageReserved(page)	set_bit(PG_reserved, &(page)->flags)

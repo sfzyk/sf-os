@@ -5,7 +5,7 @@
 pgd_t global_page_dir[1024] __attribute__((__section__(".bss.pagedir")))= { {0}, }; 
 
 
-  unsigned long virt_to_phys(void * address){
+unsigned long virt_to_phys(void * address){
     return __pa(address);
 }
 

@@ -4,6 +4,15 @@
         "cmath": "cpp",
         "limits": "cpp",
         "type_traits": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "cstdio": "c",
+        "stdio.h": "c",
+        "page_alloc.h": "c",
+        "page_flag.h": "c",
+        "page_table.h": "c",
+        "page.h": "c",
+        "bitops.h": "c",
+        "mm.h": "c",
+        "slab.h": "c"
     }
 }

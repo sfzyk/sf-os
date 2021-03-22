@@ -14,6 +14,10 @@
 #define MAX_NR_ZONES 3
 #define MAX_NUMNODES 1 
 
+#include <kernel/slab.h>
+
+
+
 /*
 dont support numa for now 
 */
@@ -124,14 +128,20 @@ struct page{
 		struct page* next; 
 		/* SLUB  use in cpu slab , or in buddy slub */
 	};
-
-	unsigned int pobjects;/* all slab in a paritial list */
-
 	/*
 		page　free : struct list_head when page is free 
 		page in slub : the next pointer
-
 	*/
+	union{
+		struct kmem_cache* cache_p;
+		int kmem_size;
+	};
+	/* if page in cache, cache_p is set*/
+	/* if page in kmem, kmem_size is set */
+	/* kmem_size == -1 when in kemem and not first page*/
+
+	unsigned int pobjects;/* all slab in a paritial list */
+
 };
 void mm_page_init(multiboot_info_t* );
 void node_alloc_mem_map(struct pglist_data*,unsigned int *);

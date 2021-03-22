@@ -39,7 +39,6 @@ void init_kmem_cache(void){
     list_add(&cache_list_head, &kmem_cache_cache.head);
     list_add(&cache_list_head, &kmem_cache_node_cache.head);
     list_add(&cache_list_head, &kmem_cache_cpu_cache.head);
-
     {
         kmem_cache_cache.cache_order = 1;
         kmem_cache_cache.inuse = 0;
@@ -125,6 +124,7 @@ static void * kmem_getpages(struct kmem_cache* cachep, int flags){
                 (pg+i)->next = pg; /* for convience */
                 (pg+i)->buddy = 1;
             }
+            pg->cache_p = cachep;
         } 
 
     pg->buddy = 0;
@@ -451,4 +451,69 @@ void kmem_cache_free(struct kmem_cache *cachep, void *objp){
 
 void kmem_cache_destroy(struct kmem_cache *cachep){
     /*to do */
+}
+
+/*
+*   这里认为如果分配的内存小于一页，那就用高速缓存，大于一页就应该给一页，但是不应该有一次要太多页的情况
+*/
+struct kmem_cache* kmalloc_small[PAGE_SHIFT];
+void kmalloc_init(){
+    char name[300];
+    for(int i=0;i<PAGE_SHIFT;i++){
+        sprintf(name,sizeof(name),"kmalloc %dth",i);
+        kmalloc_small[i] = kmem_cache_create(name,1<<i,1<<i,0,0,NULL); 
+    }
+}
+
+int get_order(int size){
+    if(size==1)return 0;
+
+    int res = 0;
+    while(size){
+        res++;
+        size/=2;
+    }
+    return res;
+}
+
+void* kmalloc(int size){
+    if(size < PAGE_SIZE){
+        int order = get_order(size);
+        return kmem_cache_alloc(kmalloc_small[order],NULL);
+    }
+    else{
+        if(size > 4*PAGE_SIZE){
+            return NULL; 
+        }
+        int pages_nums = (size+PAGE_SIZE - 1) / PAGE_SIZE ;
+        int cache_o = get_order(pages_nums);
+        struct page* pg = __alloc_pages(0, cache_o, &global_mem_node.node_zonelists[0]);
+        for(int i=0;i<pages_nums;i++){
+            SetPageKmem((pg+i));
+            if(i==0)
+                (pg+i)->kmem_size = pages_nums;
+            else
+                (pg+i)->kmem_size = -1;
+        }
+        /*
+        set page descriptor proper;
+        */
+        return page_address(pg);
+    }
+}
+
+void kfree(void *obj){
+    
+    struct page* pg =  kaddr_to_page(obj);
+    if(PageKmem(pg)){
+        int kmem_size = pg->kmem_size;
+        if(kmem_size==-1)return;
+        for(int j=0;j<kmem_size;j++){
+            free_page(pg+j);
+        }
+    }else if PageSlab(pg){
+        struct kmem_cache* kc = pg->cache_p;
+        kmem_cache_free(kc,obj);
+        return ;
+    }
 }

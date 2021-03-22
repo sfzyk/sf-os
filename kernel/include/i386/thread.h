@@ -17,7 +17,7 @@
 typedef unsigned int pid,uid_t,gid_t;
 typedef unsigned int tgid;
 typedef unsigned int cputime_t;
-typedef unsigned int cpumask_t;
+//typedef unsigned int cpumask_t;
 
 enum pid_type
 {
@@ -89,7 +89,7 @@ struct task_struct {
 	int activated;
 
 	unsigned long policy;
-	cpumask_t cpus_allowed;
+	//cpumask_t cpus_allowed;
 	unsigned int time_slice, first_time_slice;
 	
 	struct thread_struct thread;
@@ -181,5 +181,5 @@ struct thread_info {
 
 
 void thread_info();
-
+void thread_init();
 #endif 

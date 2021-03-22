@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 int printf(const char* __restrict, ...);
+int sprintf(char *buf, int size, const char* restrict format, ...);
 int putchar(int);
 int puts(const char*);
 

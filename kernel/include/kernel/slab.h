@@ -73,6 +73,7 @@ void kmem_cache_destroy(struct kmem_cache *);
 void *kmem_cache_alloc(struct kmem_cache *cachep, int flags);
 void kmem_cache_free(struct kmem_cache *cachep, void *objp);
 
- 
-
+void kmalloc_init();
+void*kmalloc(int size);
+void kfree(void *obj);
 #endif 

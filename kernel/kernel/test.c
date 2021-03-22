@@ -59,7 +59,6 @@ void test_slub(){
     // test2 = kmem_cache_create("tes2 cache",58,128,0,0,NULL);
 
     printf("localtion test1 cache : %x , test2 cache: %x\n",test1, test2);
-
     // test_dump_all_cahep();
     void *t1_o1,*t1_o2,*t1_o3;
     t1_o1 = kmem_cache_alloc(test1, 0);
@@ -76,4 +75,24 @@ void test_slub(){
     /*
     to fix tty code 
     */
+}
+
+
+void test_kmalloc(){
+    printf("test for kernel malloc test\n");
+    void *p[20];
+
+    p[1] = kmalloc(1);
+    printf("malloced pointer %x\n",p[1]);
+    
+
+    p[2] = kmalloc(5);
+    printf("malloced pointer %x\n",p[2]);
+    p[3] = kmalloc(27);
+    printf("malloced pointer %x\n",p[3]);
+
+
+    p[4] = kmalloc(7485);
+    printf("malloced pointer %x\n",p[4]);
+
 }

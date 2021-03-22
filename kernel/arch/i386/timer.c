@@ -90,7 +90,6 @@ irqreturn_t timer_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 	do_timer(regs);
 	/*smbody: used for print*/
 	if(jiffies_64 - last >= 1000){
-		terminal_initialize();
 		last = jiffies_64;
 	}else if(last > jiffies_64)
 		last = jiffies_64;

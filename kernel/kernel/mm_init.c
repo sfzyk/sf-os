@@ -67,7 +67,6 @@ void init_page_table(pgd_t *pgd_base,pte_t* pte_base){
 
 /*
 * just in case zone size changed 
-*
 */
 void zone_sizes_init(void){
     unsigned long zones_size[MAX_NR_ZONES]= {0, 0, 0};
@@ -88,6 +87,7 @@ void zone_sizes_init(void){
     /*
     * calulate the page status
     */
+
     int usedpages = 0; 
     for(int i =0 ;i< MAX_NR_ZONES;i ++){
         usedpages += zones_size[i];
@@ -140,7 +140,7 @@ void node_alloc_mem_map(struct pglist_data* pgt, unsigned int *zone_size){
         mem_map[i].private = 0;
         if((i<= kernel_page_reverse_pfn && i > (0x01000000 >> PAGE_SHIFT))|| (i<kernel_reverse_pfn_end)){ /*reversed  page: kernel data &kernel code & < 1M */
             SetPageReserved(&mem_map[i]);
-            atomic_set(&mem_map[i]._count, 0); /*i cant free a reversed page */
+            atomic_set(&mem_map[i]._count, 0); /* cant free a reversed page */
         }else{
             atomic_set(&mem_map[i]._count, -1);
             free_page(&mem_map[i]);

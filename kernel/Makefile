@@ -39,6 +39,7 @@ kernel/traps.o\
 kernel/handle.o\
 kernel/manage.o\
 kernel/time.o\
+kernel/thread.o
 
 OBJS=\
 $(ARCHDIR)/crti.o \
